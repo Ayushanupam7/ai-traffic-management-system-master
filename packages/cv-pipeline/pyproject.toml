@@ -1,0 +1,21 @@
+[project]
+name = "cv-pipeline"
+version = "0.1.0"
+description = "Computer vision pipeline for vehicle detection (YOLOS + custom YOLOv11m)"
+requires-python = ">=3.9"
+dependencies = [
+    "torch>=2.0",
+    "transformers>=4.30",
+    "ultralytics>=8.3",
+    "opencv-python>=4.8",
+    "numpy>=1.24",
+    "Pillow>=10.0",
+    "traffic-shared",
+]
+
+[tool.setuptools.packages.find]
+include = ["cv_pipeline*"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

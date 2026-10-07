@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<nodes>
+  <node id="hwy_E_in" x="-1500.0" y="200" type="priority" />
+  <node id="hwy_E_out" x="1500.0" y="200" type="priority" />
+  <node id="hwy_W_in" x="1500.0" y="-200" type="priority" />
+  <node id="hwy_W_out" x="-1500.0" y="-200" type="priority" />
+  <node id="svc_E_in" x="-1500.0" y="240" type="priority" />
+  <node id="svc_E_out" x="1500.0" y="240" type="priority" />
+  <node id="svc_W_in" x="1500.0" y="-240" type="priority" />
+  <node id="svc_W_out" x="-1500.0" y="-240" type="priority" />
+  <node id="hwy_E1" x="-400.0" y="200" type="priority" />
+  <node id="hwy_E1_end" x="-150.0" y="200" type="priority" />
+  <node id="hwy_E2" x="600.0" y="200" type="priority" />
+  <node id="hwy_E2_end" x="850.0" y="200" type="priority" />
+  <node id="svc_E1" x="-600.0" y="240" type="traffic_light" tl="E1" />
+  <node id="svc_E2" x="400.0" y="240" type="traffic_light" tl="E2" />
+  <node id="hwy_W1" x="400.0" y="-200" type="priority" />
+  <node id="hwy_W1_end" x="150.0" y="-200" type="priority" />
+  <node id="hwy_W2" x="-600.0" y="-200" type="priority" />
+  <node id="hwy_W2_end" x="-850.0" y="-200" type="priority" />
+  <node id="svc_W1" x="600.0" y="-240" type="traffic_light" tl="W1" />
+  <node id="svc_W2" x="-400.0" y="-240" type="traffic_light" tl="W2" />
+</nodes>

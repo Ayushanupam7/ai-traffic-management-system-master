@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types>
+  <type id="freeway" numLanes="4" speed="27.78" />
+  <type id="freeway_accel" numLanes="5" speed="27.78" />
+  <type id="service" numLanes="2" speed="11.11" />
+  <type id="ramp" numLanes="1" speed="19.44" />
+</types>

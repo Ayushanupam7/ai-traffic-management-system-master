@@ -1,0 +1,68 @@
+{
+  "experiment_id": "952f4bcf-5118-4a43-b3bc-890901ef5472",
+  "name": "comparison-03:42:04",
+  "seed": 42,
+  "status": "running",
+  "current_run_idx": 0,
+  "runs": [
+    {
+      "run_id": "63bb4aa1-9d2a-4309-a8c9-d9e39f6a7545",
+      "config": {
+        "mode": "sumo",
+        "policy_type": "actuated",
+        "tick_rate": 1000,
+        "seed": 42,
+        "duration_ticks": 1200,
+        "demand_profile": "asym",
+        "total_vehicles": 3500,
+        "dominant_direction": "EW",
+        "gui": false,
+        "race_mode": false,
+        "policy_params": {
+          "base_green_n": 15.0,
+          "base_green_s": 15.0,
+          "base_green_e": 35.0,
+          "base_green_w": 35.0,
+          "min_green": 10.0,
+          "max_green": 50.0,
+          "max_redist_s": 20.0,
+          "smooth_alpha": 0.5
+        },
+        "carla_vehicle_count": 80
+      },
+      "status": "running",
+      "result": null,
+      "error": null
+    },
+    {
+      "run_id": "78727962-6764-4c99-b2b1-61b70b5a2289",
+      "config": {
+        "mode": "sumo",
+        "policy_type": "actuated",
+        "tick_rate": 1000,
+        "seed": 42,
+        "duration_ticks": 1200,
+        "demand_profile": "asym",
+        "total_vehicles": 3500,
+        "dominant_direction": "EW",
+        "gui": false,
+        "race_mode": false,
+        "policy_params": {
+          "base_green_n": 15.0,
+          "base_green_s": 15.0,
+          "base_green_e": 35.0,
+          "base_green_w": 35.0,
+          "min_green": 10.0,
+          "max_green": 50.0,
+          "max_redist_s": 20.0,
+          "smooth_alpha": 0.5
+        },
+        "carla_vehicle_count": 80
+      },
+      "status": "pending",
+      "result": null,
+      "error": null
+    }
+  ],
+  "created_at": 1778125324.6550348
+}

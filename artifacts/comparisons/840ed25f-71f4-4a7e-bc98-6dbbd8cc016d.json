@@ -1,0 +1,50 @@
+{
+  "experiment_id": "840ed25f-71f4-4a7e-bc98-6dbbd8cc016d",
+  "name": "comparison-09:14:31",
+  "seed": 42,
+  "status": "completed",
+  "current_run_idx": 1,
+  "runs": [
+    {
+      "run_id": "83b722f3-1f1a-4704-84ed-1da9f4536a24",
+      "config": {
+        "policy_type": "actuated",
+        "tick_rate": 1000,
+        "seed": 42,
+        "duration_ticks": null,
+        "demand_profile": "balanced",
+        "total_vehicles": 4000,
+        "dominant_direction": "EW",
+        "gui": false,
+        "race_mode": true
+      },
+      "status": "completed",
+      "result": {
+        "clearance_s": 4464.0,
+        "avg_trip_time_s": 644.55,
+        "completed_trips": 4000,
+        "avg_control_delay_s": 0.0,
+        "throughput_veh_per_min": 0.01
+      },
+      "error": null
+    },
+    {
+      "run_id": "6c979704-cddf-4b61-974f-e531842d81e3",
+      "config": {
+        "policy_type": "fixed_time",
+        "tick_rate": 1000,
+        "seed": 42,
+        "duration_ticks": null,
+        "demand_profile": "balanced",
+        "total_vehicles": 4000,
+        "dominant_direction": "EW",
+        "gui": false,
+        "race_mode": true
+      },
+      "status": "failed",
+      "result": null,
+      "error": "no tick data captured"
+    }
+  ],
+  "created_at": 1777022071.6669548
+}

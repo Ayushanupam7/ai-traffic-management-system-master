@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<nodes>
+  <node id="hwy_E_in" x="-1500.0" y="500.0" type="priority" />
+  <node id="hwy_E_out" x="1500.0" y="500.0" type="priority" />
+  <node id="hwy_W_in" x="1500.0" y="0.0" type="priority" />
+  <node id="hwy_W_out" x="-1500.0" y="0.0" type="priority" />
+  <node id="svc_E_in" x="-1500.0" y="540.0" type="priority" />
+  <node id="svc_E_out" x="1500.0" y="540.0" type="priority" />
+  <node id="svc_W_in" x="1500.0" y="-40.0" type="priority" />
+  <node id="svc_W_out" x="-1500.0" y="-40.0" type="priority" />
+  <node id="hwy_E1" x="-325.0" y="500.0" type="priority" />
+  <node id="hwy_E1_end" x="-75.0" y="500.0" type="priority" />
+  <node id="hwy_E2" x="675.0" y="500.0" type="priority" />
+  <node id="hwy_E2_end" x="925.0" y="500.0" type="priority" />
+  <node id="svc_E1" x="-675.0" y="540.0" type="traffic_light" tl="E1" />
+  <node id="svc_E2" x="325.0" y="540.0" type="traffic_light" tl="E2" />
+  <node id="hwy_W1" x="325.0" y="0.0" type="priority" />
+  <node id="hwy_W1_end" x="75.0" y="0.0" type="priority" />
+  <node id="hwy_W2" x="-675.0" y="0.0" type="priority" />
+  <node id="hwy_W2_end" x="-925.0" y="0.0" type="priority" />
+  <node id="svc_W1" x="675.0" y="-40.0" type="traffic_light" tl="W1" />
+  <node id="svc_W2" x="-325.0" y="-40.0" type="traffic_light" tl="W2" />
+  <node id="A0" x="2300" y="0" type="traffic_light" />
+  <node id="B0" x="3000" y="0" type="traffic_light" />
+  <node id="C0" x="3700" y="0" type="traffic_light" />
+  <node id="A1" x="2300" y="500" type="traffic_light" />
+  <node id="B1" x="3000" y="500" type="traffic_light" />
+  <node id="C1" x="3700" y="500" type="traffic_light" />
+  <node id="left0" x="1800" y="0" type="priority" />
+  <node id="left1" x="1800" y="500" type="priority" />
+  <node id="right0" x="4200" y="0" type="priority" />
+  <node id="right1" x="4200" y="500" type="priority" />
+  <node id="bottom0" x="2300" y="-500" type="priority" />
+  <node id="bottom1" x="3000" y="-500" type="priority" />
+  <node id="bottom2" x="3700" y="-500" type="priority" />
+  <node id="top0" x="2300" y="1000" type="priority" />
+  <node id="top1" x="3000" y="1000" type="priority" />
+  <node id="top2" x="3700" y="1000" type="priority" />
+</nodes>

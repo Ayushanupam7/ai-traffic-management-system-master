@@ -1,0 +1,13 @@
+{
+  "name": "max redist 20 smooth 0.5",
+  "params": {
+    "base_green_n": 15.0,
+    "base_green_s": 15.0,
+    "base_green_e": 35.0,
+    "base_green_w": 35.0,
+    "min_green": 10.0,
+    "max_green": 50.0,
+    "max_redist_s": 20.0,
+    "smooth_alpha": 0.5
+  }
+}

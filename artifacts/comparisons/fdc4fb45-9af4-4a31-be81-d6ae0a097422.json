@@ -1,0 +1,65 @@
+{
+  "experiment_id": "fdc4fb45-9af4-4a31-be81-d6ae0a097422",
+  "name": "comparison-16:39:54",
+  "seed": 42,
+  "status": "completed",
+  "current_run_idx": 1,
+  "runs": [
+    {
+      "run_id": "209a37cc-f69d-4a44-9842-05ef5f3cc0e4",
+      "config": {
+        "mode": "sumo",
+        "policy_type": "actuated",
+        "tick_rate": 1000,
+        "seed": 42,
+        "duration_ticks": 1200,
+        "demand_profile": "asym",
+        "total_vehicles": 4500,
+        "dominant_direction": "EW",
+        "gui": false,
+        "race_mode": false,
+        "policy_params": {
+          "base_green_n": 15.0,
+          "base_green_s": 15.0,
+          "base_green_e": 35.0,
+          "base_green_w": 35.0,
+          "min_green": 10.0,
+          "max_green": 50.0,
+          "max_redist_s": 20.0,
+          "smooth_alpha": 0.5
+        },
+        "carla_vehicle_count": 80
+      },
+      "status": "completed",
+      "result": {
+        "clearance_s": null,
+        "avg_trip_time_s": 587.5,
+        "completed_trips": 572,
+        "avg_control_delay_s": 62.54,
+        "throughput_veh_per_min": 0.1
+      },
+      "error": null
+    },
+    {
+      "run_id": "ee395833-cb16-41eb-b4f2-136a69f0c456",
+      "config": {
+        "mode": "sumo",
+        "policy_type": "actuated",
+        "tick_rate": 1000,
+        "seed": 42,
+        "duration_ticks": 1200,
+        "demand_profile": "asym",
+        "total_vehicles": 4500,
+        "dominant_direction": "EW",
+        "gui": false,
+        "race_mode": false,
+        "policy_params": null,
+        "carla_vehicle_count": 80
+      },
+      "status": "failed",
+      "result": null,
+      "error": "Connection 'default' is already active."
+    }
+  ],
+  "created_at": 1777999194.6985512
+}

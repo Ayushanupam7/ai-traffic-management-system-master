@@ -1,0 +1,17 @@
+[project]
+name = "sumo-engine"
+version = "0.1.0"
+description = "SUMO simulation wrapper with TraCI integration"
+requires-python = ">=3.9"
+dependencies = [
+    "traci>=1.18",
+    "sumolib>=1.18",
+    "traffic-shared",
+]
+
+[tool.setuptools.packages.find]
+include = ["sumo_engine*"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

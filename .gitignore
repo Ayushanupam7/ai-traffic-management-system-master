@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+*.whl
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# SUMO
+*.log
+*.xml.bak
+
+# CV Models (use git-lfs for large files)
+packages/cv-pipeline/models/*.pt
+packages/cv-pipeline/models/*.pth
+packages/cv-pipeline/models/*.onnx
+packages/cv-pipeline/models/*.bin
+!packages/cv-pipeline/models/.gitkeep
+# Custom YOLOv11m weights committed directly (39 MB, under GitHub's 100 MB limit)
+!packages/cv-pipeline/models/best.pt
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Misc
+*.bak
+*.tmp
+
+# AI dev tooling (Claude Code, Superpowers)
+.claude/
+.superpowers/
+docs/superpowers/
+
+# TypeScript incremental build cache
+frontend/tsconfig.tsbuildinfo
+
+# Session / iteration notes (not for the public repo)
+SESSION_LOG*.txt
+session_progress.txt
+dashboard_iteration_*.txt
+Running inst.txt
+CLAUDE.md
+
+# Capstone deliverables (host separately — LinkedIn, Drive, etc.)
+*.pdf
+*.pptx
+
+# macOS duplicate filenames
+* copy.*

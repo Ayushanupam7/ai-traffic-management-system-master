@@ -1,0 +1,43 @@
+name: Bug report
+description: Report a problem running or using the platform
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Include steps to reproduce and your OS / Python / Node versions.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      placeholder: Describe the bug and expected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start backend with ...
+        2. Open dashboard ...
+        3. Click Start ...
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Environment
+      placeholder: macOS 14, Python 3.12, Node 20, SUMO 1.26
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Simulation mode
+      options:
+        - SUMO only
+        - CARLA + vision
+        - Not sure

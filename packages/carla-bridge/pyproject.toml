@@ -1,0 +1,22 @@
+[project]
+name = "carla-bridge"
+version = "0.1.0"
+description = "CARLA co-simulation bridge: mirrors SUMO vehicles into a CARLA scene and streams camera frames"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24",
+    "Pillow>=10.0",
+    "traffic-shared",
+    "cv-pipeline",
+]
+
+# The `carla` Python wheel itself is NOT listed here. It must match the
+# installed CARLA server version (typically 0.9.14 or 0.9.15) and is
+# installed by the user from CARLA's PythonAPI/ directory.
+
+[tool.setuptools.packages.find]
+include = ["carla_bridge*"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

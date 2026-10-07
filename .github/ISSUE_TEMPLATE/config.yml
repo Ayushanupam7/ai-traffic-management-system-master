@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Capstone report
+    url: https://github.com/3bdulah/ai-traffic-management-system/blob/master/docs/CAPSTONE_REPORT.md
+    about: Methodology, full results, and analysis
+  - name: Demo guide
+    url: https://github.com/3bdulah/ai-traffic-management-system/blob/master/docs/DEMO.md
+    about: Run locally without Supabase or Groq

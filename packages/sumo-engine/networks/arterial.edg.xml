@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<edges>
+  <edge id="left0A0" from="left0" to="A0" type="arterial" />
+  <edge id="A0left0" from="A0" to="left0" type="arterial" />
+  <edge id="A0B0" from="A0" to="B0" type="arterial" />
+  <edge id="B0A0" from="B0" to="A0" type="arterial" />
+  <edge id="B0C0" from="B0" to="C0" type="arterial" />
+  <edge id="C0B0" from="C0" to="B0" type="arterial" />
+  <edge id="C0right0" from="C0" to="right0" type="arterial" />
+  <edge id="right0C0" from="right0" to="C0" type="arterial" />
+  <edge id="left1A1" from="left1" to="A1" type="arterial" />
+  <edge id="A1left1" from="A1" to="left1" type="arterial" />
+  <edge id="A1B1" from="A1" to="B1" type="arterial" />
+  <edge id="B1A1" from="B1" to="A1" type="arterial" />
+  <edge id="B1C1" from="B1" to="C1" type="arterial" />
+  <edge id="C1B1" from="C1" to="B1" type="arterial" />
+  <edge id="C1right1" from="C1" to="right1" type="arterial" />
+  <edge id="right1C1" from="right1" to="C1" type="arterial" />
+  <edge id="bottom0A0" from="bottom0" to="A0" type="cross" />
+  <edge id="A0bottom0" from="A0" to="bottom0" type="cross" />
+  <edge id="A0A1" from="A0" to="A1" type="cross" />
+  <edge id="A1A0" from="A1" to="A0" type="cross" />
+  <edge id="A1top0" from="A1" to="top0" type="cross" />
+  <edge id="top0A1" from="top0" to="A1" type="cross" />
+  <edge id="bottom1B0" from="bottom1" to="B0" type="cross" />
+  <edge id="B0bottom1" from="B0" to="bottom1" type="cross" />
+  <edge id="B0B1" from="B0" to="B1" type="cross" />
+  <edge id="B1B0" from="B1" to="B0" type="cross" />
+  <edge id="B1top1" from="B1" to="top1" type="cross" />
+  <edge id="top1B1" from="top1" to="B1" type="cross" />
+  <edge id="bottom2C0" from="bottom2" to="C0" type="cross" />
+  <edge id="C0bottom2" from="C0" to="bottom2" type="cross" />
+  <edge id="C0C1" from="C0" to="C1" type="cross" />
+  <edge id="C1C0" from="C1" to="C0" type="cross" />
+  <edge id="C1top2" from="C1" to="top2" type="cross" />
+  <edge id="top2C1" from="top2" to="C1" type="cross" />
+</edges>

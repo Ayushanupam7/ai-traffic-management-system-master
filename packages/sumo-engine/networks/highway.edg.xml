@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<edges>
+  <edge id="hwy_E_s1" from="hwy_E_in" to="hwy_E1" type="freeway" />
+  <edge id="hwy_E_s1_accel" from="hwy_E1" to="hwy_E1_end" type="freeway_accel" />
+  <edge id="hwy_E_s2" from="hwy_E1_end" to="hwy_E2" type="freeway" />
+  <edge id="hwy_E_s2_accel" from="hwy_E2" to="hwy_E2_end" type="freeway_accel" />
+  <edge id="hwy_E_s3" from="hwy_E2_end" to="hwy_E_out" type="freeway" />
+  <edge id="hwy_W_s1" from="hwy_W_in" to="hwy_W1" type="freeway" />
+  <edge id="hwy_W_s1_accel" from="hwy_W1" to="hwy_W1_end" type="freeway_accel" />
+  <edge id="hwy_W_s2" from="hwy_W1_end" to="hwy_W2" type="freeway" />
+  <edge id="hwy_W_s2_accel" from="hwy_W2" to="hwy_W2_end" type="freeway_accel" />
+  <edge id="hwy_W_s3" from="hwy_W2_end" to="hwy_W_out" type="freeway" />
+  <edge id="svc_E_s1" from="svc_E_in" to="svc_E1" type="service" />
+  <edge id="svc_E_s2" from="svc_E1" to="svc_E2" type="service" />
+  <edge id="svc_E_s3" from="svc_E2" to="svc_E_out" type="service" />
+  <edge id="svc_W_s1" from="svc_W_in" to="svc_W1" type="service" />
+  <edge id="svc_W_s2" from="svc_W1" to="svc_W2" type="service" />
+  <edge id="svc_W_s3" from="svc_W2" to="svc_W_out" type="service" />
+  <edge id="merge_E1" from="svc_E1" to="hwy_E1" type="ramp" />
+  <edge id="merge_E2" from="svc_E2" to="hwy_E2" type="ramp" />
+  <edge id="merge_W1" from="svc_W1" to="hwy_W1" type="ramp" />
+  <edge id="merge_W2" from="svc_W2" to="hwy_W2" type="ramp" />
+</edges>

@@ -1,0 +1,13 @@
+[project]
+name = "adaptive-policy"
+version = "0.1.0"
+description = "Adaptive traffic signal control policies"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24",
+    "traffic-shared",
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

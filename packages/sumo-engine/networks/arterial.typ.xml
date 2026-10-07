@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types>
+  <type id="arterial" numLanes="3" speed="5.56" />
+  <type id="cross" numLanes="2" speed="3.61" />
+</types>

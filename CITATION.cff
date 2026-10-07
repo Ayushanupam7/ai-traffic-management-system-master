@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+title: AI-Based Smart Traffic Monitoring and Management System
+message: If you use this software in academic work, please cite it as below.
+authors:
+  - family-names: Al-Shobaki
+    given-names: Abdullah Hani Abdellatif
+  - family-names: Salamoun
+    given-names: Abdullah Shaher
+  - family-names: Alkhozendar
+    given-names: Mohamed Aiman
+  - family-names: Al-Labani
+    given-names: Mohammed Ahmed
+  - family-names: Dribika
+    given-names: Mohamed
+  - family-names: Jayyusi
+    given-names: Omar Kamal Burhan
+repository-code: https://github.com/3bdulah/ai-traffic-management-system
+url: https://github.com/3bdulah/ai-traffic-management-system
+date-released: 2026-06-25
+keywords:
+  - traffic simulation
+  - computer vision
+  - adaptive signal control
+  - YOLOv11
+  - SUMO
+  - capstone
+license: MIT

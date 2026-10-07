@@ -1,0 +1,389 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<net xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.20" junctionCornerDetail="5" limitTurnSpeed="5.50" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="1500.00,240.00" convBoundary="0.00,0.00,3000.00,480.00" origBoundary="-1500.00,-240.00,1500.00,240.00" projParameter="!" />
+
+    <type id="freeway" numLanes="4" speed="27.78" />
+    <type id="freeway_accel" numLanes="5" speed="27.78" />
+    <type id="ramp" numLanes="1" speed="19.44" />
+    <type id="service" numLanes="2" speed="11.11" />
+
+    <edge id=":hwy_E1_0" function="internal">
+        <lane id=":hwy_E1_0_0" index="0" speed="27.78" length="19.32" shape="1082.18,428.80 1101.50,428.80" />
+        <lane id=":hwy_E1_0_1" index="1" speed="27.78" length="19.32" shape="1082.18,432.00 1101.50,432.00" />
+        <lane id=":hwy_E1_0_2" index="2" speed="27.78" length="19.32" shape="1082.18,435.20 1101.50,435.20" />
+        <lane id=":hwy_E1_0_3" index="3" speed="27.78" length="19.32" shape="1082.18,438.40 1101.50,438.40" />
+    </edge>
+    <edge id=":hwy_E1_4" function="internal">
+        <lane id=":hwy_E1_4_0" index="0" speed="23.61" length="26.00" shape="1082.53,441.86 1085.80,438.91 1089.17,433.36 1093.95,428.00 1101.50,425.60" />
+    </edge>
+    <edge id=":hwy_E1_end_0" function="internal">
+        <lane id=":hwy_E1_end_0_0" index="0" speed="27.78" length="8.00" shape="1346.00,428.80 1354.00,428.80" />
+        <lane id=":hwy_E1_end_0_1" index="1" speed="27.78" length="8.00" shape="1346.00,432.00 1354.00,432.00" />
+        <lane id=":hwy_E1_end_0_2" index="2" speed="27.78" length="8.00" shape="1346.00,435.20 1354.00,435.20" />
+        <lane id=":hwy_E1_end_0_3" index="3" speed="27.78" length="8.00" shape="1346.00,438.40 1354.00,438.40" />
+    </edge>
+    <edge id=":hwy_E2_0" function="internal">
+        <lane id=":hwy_E2_0_0" index="0" speed="27.78" length="19.32" shape="2082.18,428.80 2101.50,428.80" />
+        <lane id=":hwy_E2_0_1" index="1" speed="27.78" length="19.32" shape="2082.18,432.00 2101.50,432.00" />
+        <lane id=":hwy_E2_0_2" index="2" speed="27.78" length="19.32" shape="2082.18,435.20 2101.50,435.20" />
+        <lane id=":hwy_E2_0_3" index="3" speed="27.78" length="19.32" shape="2082.18,438.40 2101.50,438.40" />
+    </edge>
+    <edge id=":hwy_E2_4" function="internal">
+        <lane id=":hwy_E2_4_0" index="0" speed="23.61" length="26.00" shape="2082.53,441.86 2085.80,438.91 2089.17,433.36 2093.95,428.00 2101.50,425.60" />
+    </edge>
+    <edge id=":hwy_E2_end_0" function="internal">
+        <lane id=":hwy_E2_end_0_0" index="0" speed="27.78" length="8.00" shape="2346.00,428.80 2354.00,428.80" />
+        <lane id=":hwy_E2_end_0_1" index="1" speed="27.78" length="8.00" shape="2346.00,432.00 2354.00,432.00" />
+        <lane id=":hwy_E2_end_0_2" index="2" speed="27.78" length="8.00" shape="2346.00,435.20 2354.00,435.20" />
+        <lane id=":hwy_E2_end_0_3" index="3" speed="27.78" length="8.00" shape="2346.00,438.40 2354.00,438.40" />
+    </edge>
+    <edge id=":hwy_W1_0" function="internal">
+        <lane id=":hwy_W1_0_0" index="0" speed="27.78" length="19.32" shape="1917.82,51.20 1898.50,51.20" />
+        <lane id=":hwy_W1_0_1" index="1" speed="27.78" length="19.32" shape="1917.82,48.00 1898.50,48.00" />
+        <lane id=":hwy_W1_0_2" index="2" speed="27.78" length="19.32" shape="1917.82,44.80 1898.50,44.80" />
+        <lane id=":hwy_W1_0_3" index="3" speed="27.78" length="19.32" shape="1917.82,41.60 1898.50,41.60" />
+    </edge>
+    <edge id=":hwy_W1_4" function="internal">
+        <lane id=":hwy_W1_4_0" index="0" speed="23.61" length="26.00" shape="1917.47,38.14 1914.20,41.09 1910.83,46.64 1906.05,52.00 1898.50,54.40" />
+    </edge>
+    <edge id=":hwy_W1_end_0" function="internal">
+        <lane id=":hwy_W1_end_0_0" index="0" speed="27.78" length="8.00" shape="1654.00,51.20 1646.00,51.20" />
+        <lane id=":hwy_W1_end_0_1" index="1" speed="27.78" length="8.00" shape="1654.00,48.00 1646.00,48.00" />
+        <lane id=":hwy_W1_end_0_2" index="2" speed="27.78" length="8.00" shape="1654.00,44.80 1646.00,44.80" />
+        <lane id=":hwy_W1_end_0_3" index="3" speed="27.78" length="8.00" shape="1654.00,41.60 1646.00,41.60" />
+    </edge>
+    <edge id=":hwy_W2_0" function="internal">
+        <lane id=":hwy_W2_0_0" index="0" speed="27.78" length="19.32" shape="917.82,51.20 898.50,51.20" />
+        <lane id=":hwy_W2_0_1" index="1" speed="27.78" length="19.32" shape="917.82,48.00 898.50,48.00" />
+        <lane id=":hwy_W2_0_2" index="2" speed="27.78" length="19.32" shape="917.82,44.80 898.50,44.80" />
+        <lane id=":hwy_W2_0_3" index="3" speed="27.78" length="19.32" shape="917.82,41.60 898.50,41.60" />
+    </edge>
+    <edge id=":hwy_W2_4" function="internal">
+        <lane id=":hwy_W2_4_0" index="0" speed="23.61" length="26.00" shape="917.47,38.14 914.20,41.09 910.83,46.64 906.05,52.00 898.50,54.40" />
+    </edge>
+    <edge id=":hwy_W2_end_0" function="internal">
+        <lane id=":hwy_W2_end_0_0" index="0" speed="27.78" length="8.00" shape="654.00,51.20 646.00,51.20" />
+        <lane id=":hwy_W2_end_0_1" index="1" speed="27.78" length="8.00" shape="654.00,48.00 646.00,48.00" />
+        <lane id=":hwy_W2_end_0_2" index="2" speed="27.78" length="8.00" shape="654.00,44.80 646.00,44.80" />
+        <lane id=":hwy_W2_end_0_3" index="3" speed="27.78" length="8.00" shape="654.00,41.60 646.00,41.60" />
+    </edge>
+    <edge id=":svc_E1_0" function="internal">
+        <lane id=":svc_E1_0_0" index="0" speed="15.28" length="24.31" shape="911.68,475.20 918.95,474.72 925.56,473.59 931.21,472.28 935.61,471.25" />
+    </edge>
+    <edge id=":svc_E1_1" function="internal">
+        <lane id=":svc_E1_1_0" index="0" speed="11.11" length="24.32" shape="911.68,475.20 936.00,475.20" />
+        <lane id=":svc_E1_1_1" index="1" speed="11.11" length="24.32" shape="911.68,478.40 936.00,478.40" />
+    </edge>
+    <edge id=":svc_E2_0" function="internal">
+        <lane id=":svc_E2_0_0" index="0" speed="15.28" length="24.31" shape="1911.68,475.20 1918.95,474.72 1925.56,473.59 1931.21,472.28 1935.61,471.25" />
+    </edge>
+    <edge id=":svc_E2_1" function="internal">
+        <lane id=":svc_E2_1_0" index="0" speed="11.11" length="24.32" shape="1911.68,475.20 1936.00,475.20" />
+        <lane id=":svc_E2_1_1" index="1" speed="11.11" length="24.32" shape="1911.68,478.40 1936.00,478.40" />
+    </edge>
+    <edge id=":svc_W1_0" function="internal">
+        <lane id=":svc_W1_0_0" index="0" speed="15.28" length="24.31" shape="2088.32,4.80 2081.05,5.28 2074.44,6.41 2068.79,7.72 2064.39,8.75" />
+    </edge>
+    <edge id=":svc_W1_1" function="internal">
+        <lane id=":svc_W1_1_0" index="0" speed="11.11" length="24.32" shape="2088.32,4.80 2064.00,4.80" />
+        <lane id=":svc_W1_1_1" index="1" speed="11.11" length="24.32" shape="2088.32,1.60 2064.00,1.60" />
+    </edge>
+    <edge id=":svc_W2_0" function="internal">
+        <lane id=":svc_W2_0_0" index="0" speed="15.28" length="24.31" shape="1088.32,4.80 1081.05,5.28 1074.44,6.41 1068.79,7.72 1064.39,8.75" />
+    </edge>
+    <edge id=":svc_W2_1" function="internal">
+        <lane id=":svc_W2_1_0" index="0" speed="11.11" length="24.32" shape="1088.32,4.80 1064.00,4.80" />
+        <lane id=":svc_W2_1_1" index="1" speed="11.11" length="24.32" shape="1088.32,1.60 1064.00,1.60" />
+    </edge>
+
+    <edge id="hwy_E_s1" from="hwy_E_in" to="hwy_E1" priority="-1" type="freeway">
+        <lane id="hwy_E_s1_0" index="0" speed="27.78" length="1082.18" shape="0.00,428.80 1082.18,428.80" />
+        <lane id="hwy_E_s1_1" index="1" speed="27.78" length="1082.18" shape="0.00,432.00 1082.18,432.00" />
+        <lane id="hwy_E_s1_2" index="2" speed="27.78" length="1082.18" shape="0.00,435.20 1082.18,435.20" />
+        <lane id="hwy_E_s1_3" index="3" speed="27.78" length="1082.18" shape="0.00,438.40 1082.18,438.40" />
+    </edge>
+    <edge id="hwy_E_s1_accel" from="hwy_E1" to="hwy_E1_end" priority="-1" type="freeway_accel">
+        <lane id="hwy_E_s1_accel_0" index="0" speed="27.78" length="244.50" acceleration="1" shape="1101.50,425.60 1346.00,425.60" />
+        <lane id="hwy_E_s1_accel_1" index="1" speed="27.78" length="244.50" acceleration="1" shape="1101.50,428.80 1346.00,428.80" />
+        <lane id="hwy_E_s1_accel_2" index="2" speed="27.78" length="244.50" acceleration="1" shape="1101.50,432.00 1346.00,432.00" />
+        <lane id="hwy_E_s1_accel_3" index="3" speed="27.78" length="244.50" acceleration="1" shape="1101.50,435.20 1346.00,435.20" />
+        <lane id="hwy_E_s1_accel_4" index="4" speed="27.78" length="244.50" shape="1101.50,438.40 1346.00,438.40" />
+    </edge>
+    <edge id="hwy_E_s2" from="hwy_E1_end" to="hwy_E2" priority="-1" type="freeway">
+        <lane id="hwy_E_s2_0" index="0" speed="27.78" length="728.18" shape="1354.00,428.80 2082.18,428.80" />
+        <lane id="hwy_E_s2_1" index="1" speed="27.78" length="728.18" shape="1354.00,432.00 2082.18,432.00" />
+        <lane id="hwy_E_s2_2" index="2" speed="27.78" length="728.18" shape="1354.00,435.20 2082.18,435.20" />
+        <lane id="hwy_E_s2_3" index="3" speed="27.78" length="728.18" shape="1354.00,438.40 2082.18,438.40" />
+    </edge>
+    <edge id="hwy_E_s2_accel" from="hwy_E2" to="hwy_E2_end" priority="-1" type="freeway_accel">
+        <lane id="hwy_E_s2_accel_0" index="0" speed="27.78" length="244.50" acceleration="1" shape="2101.50,425.60 2346.00,425.60" />
+        <lane id="hwy_E_s2_accel_1" index="1" speed="27.78" length="244.50" acceleration="1" shape="2101.50,428.80 2346.00,428.80" />
+        <lane id="hwy_E_s2_accel_2" index="2" speed="27.78" length="244.50" acceleration="1" shape="2101.50,432.00 2346.00,432.00" />
+        <lane id="hwy_E_s2_accel_3" index="3" speed="27.78" length="244.50" acceleration="1" shape="2101.50,435.20 2346.00,435.20" />
+        <lane id="hwy_E_s2_accel_4" index="4" speed="27.78" length="244.50" shape="2101.50,438.40 2346.00,438.40" />
+    </edge>
+    <edge id="hwy_E_s3" from="hwy_E2_end" to="hwy_E_out" priority="-1" type="freeway">
+        <lane id="hwy_E_s3_0" index="0" speed="27.78" length="646.00" shape="2354.00,428.80 3000.00,428.80" />
+        <lane id="hwy_E_s3_1" index="1" speed="27.78" length="646.00" shape="2354.00,432.00 3000.00,432.00" />
+        <lane id="hwy_E_s3_2" index="2" speed="27.78" length="646.00" shape="2354.00,435.20 3000.00,435.20" />
+        <lane id="hwy_E_s3_3" index="3" speed="27.78" length="646.00" shape="2354.00,438.40 3000.00,438.40" />
+    </edge>
+    <edge id="hwy_W_s1" from="hwy_W_in" to="hwy_W1" priority="-1" type="freeway">
+        <lane id="hwy_W_s1_0" index="0" speed="27.78" length="1082.18" shape="3000.00,51.20 1917.82,51.20" />
+        <lane id="hwy_W_s1_1" index="1" speed="27.78" length="1082.18" shape="3000.00,48.00 1917.82,48.00" />
+        <lane id="hwy_W_s1_2" index="2" speed="27.78" length="1082.18" shape="3000.00,44.80 1917.82,44.80" />
+        <lane id="hwy_W_s1_3" index="3" speed="27.78" length="1082.18" shape="3000.00,41.60 1917.82,41.60" />
+    </edge>
+    <edge id="hwy_W_s1_accel" from="hwy_W1" to="hwy_W1_end" priority="-1" type="freeway_accel">
+        <lane id="hwy_W_s1_accel_0" index="0" speed="27.78" length="244.50" acceleration="1" shape="1898.50,54.40 1654.00,54.40" />
+        <lane id="hwy_W_s1_accel_1" index="1" speed="27.78" length="244.50" acceleration="1" shape="1898.50,51.20 1654.00,51.20" />
+        <lane id="hwy_W_s1_accel_2" index="2" speed="27.78" length="244.50" acceleration="1" shape="1898.50,48.00 1654.00,48.00" />
+        <lane id="hwy_W_s1_accel_3" index="3" speed="27.78" length="244.50" acceleration="1" shape="1898.50,44.80 1654.00,44.80" />
+        <lane id="hwy_W_s1_accel_4" index="4" speed="27.78" length="244.50" shape="1898.50,41.60 1654.00,41.60" />
+    </edge>
+    <edge id="hwy_W_s2" from="hwy_W1_end" to="hwy_W2" priority="-1" type="freeway">
+        <lane id="hwy_W_s2_0" index="0" speed="27.78" length="728.18" shape="1646.00,51.20 917.82,51.20" />
+        <lane id="hwy_W_s2_1" index="1" speed="27.78" length="728.18" shape="1646.00,48.00 917.82,48.00" />
+        <lane id="hwy_W_s2_2" index="2" speed="27.78" length="728.18" shape="1646.00,44.80 917.82,44.80" />
+        <lane id="hwy_W_s2_3" index="3" speed="27.78" length="728.18" shape="1646.00,41.60 917.82,41.60" />
+    </edge>
+    <edge id="hwy_W_s2_accel" from="hwy_W2" to="hwy_W2_end" priority="-1" type="freeway_accel">
+        <lane id="hwy_W_s2_accel_0" index="0" speed="27.78" length="244.50" acceleration="1" shape="898.50,54.40 654.00,54.40" />
+        <lane id="hwy_W_s2_accel_1" index="1" speed="27.78" length="244.50" acceleration="1" shape="898.50,51.20 654.00,51.20" />
+        <lane id="hwy_W_s2_accel_2" index="2" speed="27.78" length="244.50" acceleration="1" shape="898.50,48.00 654.00,48.00" />
+        <lane id="hwy_W_s2_accel_3" index="3" speed="27.78" length="244.50" acceleration="1" shape="898.50,44.80 654.00,44.80" />
+        <lane id="hwy_W_s2_accel_4" index="4" speed="27.78" length="244.50" shape="898.50,41.60 654.00,41.60" />
+    </edge>
+    <edge id="hwy_W_s3" from="hwy_W2_end" to="hwy_W_out" priority="-1" type="freeway">
+        <lane id="hwy_W_s3_0" index="0" speed="27.78" length="646.00" shape="646.00,51.20 0.00,51.20" />
+        <lane id="hwy_W_s3_1" index="1" speed="27.78" length="646.00" shape="646.00,48.00 0.00,48.00" />
+        <lane id="hwy_W_s3_2" index="2" speed="27.78" length="646.00" shape="646.00,44.80 0.00,44.80" />
+        <lane id="hwy_W_s3_3" index="3" speed="27.78" length="646.00" shape="646.00,41.60 0.00,41.60" />
+    </edge>
+    <edge id="merge_E1" from="svc_E1" to="hwy_E1" priority="-1" type="ramp">
+        <lane id="merge_E1_0" index="0" speed="19.44" length="149.83" shape="935.61,471.25 1082.53,441.86" />
+    </edge>
+    <edge id="merge_E2" from="svc_E2" to="hwy_E2" priority="-1" type="ramp">
+        <lane id="merge_E2_0" index="0" speed="19.44" length="149.83" shape="1935.61,471.25 2082.53,441.86" />
+    </edge>
+    <edge id="merge_W1" from="svc_W1" to="hwy_W1" priority="-1" type="ramp">
+        <lane id="merge_W1_0" index="0" speed="19.44" length="149.83" shape="2064.39,8.75 1917.47,38.14" />
+    </edge>
+    <edge id="merge_W2" from="svc_W2" to="hwy_W2" priority="-1" type="ramp">
+        <lane id="merge_W2_0" index="0" speed="19.44" length="149.83" shape="1064.39,8.75 917.47,38.14" />
+    </edge>
+    <edge id="svc_E_s1" from="svc_E_in" to="svc_E1" priority="-1" type="service">
+        <lane id="svc_E_s1_0" index="0" speed="11.11" length="911.68" shape="0.00,475.20 911.68,475.20" />
+        <lane id="svc_E_s1_1" index="1" speed="11.11" length="911.68" shape="0.00,478.40 911.68,478.40" />
+    </edge>
+    <edge id="svc_E_s2" from="svc_E1" to="svc_E2" priority="-1" type="service">
+        <lane id="svc_E_s2_0" index="0" speed="11.11" length="975.68" shape="936.00,475.20 1911.68,475.20" />
+        <lane id="svc_E_s2_1" index="1" speed="11.11" length="975.68" shape="936.00,478.40 1911.68,478.40" />
+    </edge>
+    <edge id="svc_E_s3" from="svc_E2" to="svc_E_out" priority="-1" type="service">
+        <lane id="svc_E_s3_0" index="0" speed="11.11" length="1064.00" shape="1936.00,475.20 3000.00,475.20" />
+        <lane id="svc_E_s3_1" index="1" speed="11.11" length="1064.00" shape="1936.00,478.40 3000.00,478.40" />
+    </edge>
+    <edge id="svc_W_s1" from="svc_W_in" to="svc_W1" priority="-1" type="service">
+        <lane id="svc_W_s1_0" index="0" speed="11.11" length="911.68" shape="3000.00,4.80 2088.32,4.80" />
+        <lane id="svc_W_s1_1" index="1" speed="11.11" length="911.68" shape="3000.00,1.60 2088.32,1.60" />
+    </edge>
+    <edge id="svc_W_s2" from="svc_W1" to="svc_W2" priority="-1" type="service">
+        <lane id="svc_W_s2_0" index="0" speed="11.11" length="975.68" shape="2064.00,4.80 1088.32,4.80" />
+        <lane id="svc_W_s2_1" index="1" speed="11.11" length="975.68" shape="2064.00,1.60 1088.32,1.60" />
+    </edge>
+    <edge id="svc_W_s3" from="svc_W2" to="svc_W_out" priority="-1" type="service">
+        <lane id="svc_W_s3_0" index="0" speed="11.11" length="1064.00" shape="1064.00,4.80 0.00,4.80" />
+        <lane id="svc_W_s3_1" index="1" speed="11.11" length="1064.00" shape="1064.00,1.60 0.00,1.60" />
+    </edge>
+
+    <tlLogic id="E1" type="static" programID="0" offset="0">
+        <phase duration="19" state="GGG" /><phase duration="1" state="rGG" /></tlLogic>
+    <tlLogic id="E2" type="static" programID="0" offset="0">
+        <phase duration="19" state="GGG" /><phase duration="1" state="rGG" /></tlLogic>
+    <tlLogic id="W1" type="static" programID="0" offset="0">
+        <phase duration="19" state="GGG" /><phase duration="1" state="rGG" /></tlLogic>
+    <tlLogic id="W2" type="static" programID="0" offset="0">
+        <phase duration="19" state="GGG" /><phase duration="1" state="rGG" /></tlLogic>
+
+    <junction id="hwy_E1" type="priority" x="1100.00" y="440.00" incLanes="hwy_E_s1_0 hwy_E_s1_1 hwy_E_s1_2 hwy_E_s1_3 merge_E1_0" intLanes=":hwy_E1_0_0 :hwy_E1_0_1 :hwy_E1_0_2 :hwy_E1_0_3 :hwy_E1_4_0" shape="1101.50,440.00 1101.50,424.00 1097.35,424.24 1094.32,424.83 1089.37,426.37 1086.33,426.96 1082.18,427.20 1082.18,440.00 1082.21,440.29 1082.84,443.43 1086.79,442.53 1089.70,441.72 1092.10,441.02 1094.51,440.48 1097.47,440.13">
+        <request index="0" response="00000" foes="00000" cont="0" />
+        <request index="1" response="00000" foes="00000" cont="0" />
+        <request index="2" response="00000" foes="00000" cont="0" />
+        <request index="3" response="00000" foes="00000" cont="0" />
+        <request index="4" response="00000" foes="00000" cont="0" />
+    </junction>
+    <junction id="hwy_E1_end" type="priority" x="1350.00" y="440.00" incLanes="hwy_E_s1_accel_0 hwy_E_s1_accel_1 hwy_E_s1_accel_2 hwy_E_s1_accel_3 hwy_E_s1_accel_4" intLanes=":hwy_E1_end_0_0 :hwy_E1_end_0_1 :hwy_E1_end_0_2 :hwy_E1_end_0_3" shape="1354.00,440.00 1354.00,427.20 1350.97,426.37 1349.03,424.83 1347.79,424.24 1346.00,424.00 1346.00,440.00">
+        <request index="0" response="0000" foes="0000" cont="0" />
+        <request index="1" response="0000" foes="0000" cont="0" />
+        <request index="2" response="0000" foes="0000" cont="0" />
+        <request index="3" response="0000" foes="0000" cont="0" />
+    </junction>
+    <junction id="hwy_E2" type="priority" x="2100.00" y="440.00" incLanes="hwy_E_s2_0 hwy_E_s2_1 hwy_E_s2_2 hwy_E_s2_3 merge_E2_0" intLanes=":hwy_E2_0_0 :hwy_E2_0_1 :hwy_E2_0_2 :hwy_E2_0_3 :hwy_E2_4_0" shape="2101.50,440.00 2101.50,424.00 2097.35,424.24 2094.32,424.83 2089.37,426.37 2086.33,426.96 2082.18,427.20 2082.18,440.00 2082.21,440.29 2082.84,443.43 2086.79,442.53 2089.70,441.72 2092.10,441.02 2094.51,440.48 2097.47,440.13">
+        <request index="0" response="00000" foes="00000" cont="0" />
+        <request index="1" response="00000" foes="00000" cont="0" />
+        <request index="2" response="00000" foes="00000" cont="0" />
+        <request index="3" response="00000" foes="00000" cont="0" />
+        <request index="4" response="00000" foes="00000" cont="0" />
+    </junction>
+    <junction id="hwy_E2_end" type="priority" x="2350.00" y="440.00" incLanes="hwy_E_s2_accel_0 hwy_E_s2_accel_1 hwy_E_s2_accel_2 hwy_E_s2_accel_3 hwy_E_s2_accel_4" intLanes=":hwy_E2_end_0_0 :hwy_E2_end_0_1 :hwy_E2_end_0_2 :hwy_E2_end_0_3" shape="2354.00,440.00 2354.00,427.20 2350.97,426.37 2349.03,424.83 2347.79,424.24 2346.00,424.00 2346.00,440.00">
+        <request index="0" response="0000" foes="0000" cont="0" />
+        <request index="1" response="0000" foes="0000" cont="0" />
+        <request index="2" response="0000" foes="0000" cont="0" />
+        <request index="3" response="0000" foes="0000" cont="0" />
+    </junction>
+    <junction id="hwy_E_in" type="dead_end" x="0.00" y="440.00" incLanes="" intLanes="" shape="0.00,440.00 0.00,427.20" />
+    <junction id="hwy_E_out" type="dead_end" x="3000.00" y="440.00" incLanes="hwy_E_s3_0 hwy_E_s3_1 hwy_E_s3_2 hwy_E_s3_3" intLanes="" shape="3000.00,427.20 3000.00,440.00" />
+    <junction id="hwy_W1" type="priority" x="1900.00" y="40.00" incLanes="hwy_W_s1_0 hwy_W_s1_1 hwy_W_s1_2 hwy_W_s1_3 merge_W1_0" intLanes=":hwy_W1_0_0 :hwy_W1_0_1 :hwy_W1_0_2 :hwy_W1_0_3 :hwy_W1_4_0" shape="1917.82,52.80 1917.82,40.00 1917.79,39.71 1917.16,36.57 1913.21,37.47 1910.30,38.28 1907.90,38.98 1905.49,39.52 1902.53,39.87 1898.50,40.00 1898.50,56.00 1902.65,55.76 1905.68,55.17 1910.63,53.63 1913.67,53.04">
+        <request index="0" response="00000" foes="00000" cont="0" />
+        <request index="1" response="00000" foes="00000" cont="0" />
+        <request index="2" response="00000" foes="00000" cont="0" />
+        <request index="3" response="00000" foes="00000" cont="0" />
+        <request index="4" response="00000" foes="00000" cont="0" />
+    </junction>
+    <junction id="hwy_W1_end" type="priority" x="1650.00" y="40.00" incLanes="hwy_W_s1_accel_0 hwy_W_s1_accel_1 hwy_W_s1_accel_2 hwy_W_s1_accel_3 hwy_W_s1_accel_4" intLanes=":hwy_W1_end_0_0 :hwy_W1_end_0_1 :hwy_W1_end_0_2 :hwy_W1_end_0_3" shape="1654.00,56.00 1654.00,40.00 1646.00,40.00 1646.00,52.80 1649.03,53.63 1650.97,55.17 1652.21,55.76">
+        <request index="0" response="0000" foes="0000" cont="0" />
+        <request index="1" response="0000" foes="0000" cont="0" />
+        <request index="2" response="0000" foes="0000" cont="0" />
+        <request index="3" response="0000" foes="0000" cont="0" />
+    </junction>
+    <junction id="hwy_W2" type="priority" x="900.00" y="40.00" incLanes="hwy_W_s2_0 hwy_W_s2_1 hwy_W_s2_2 hwy_W_s2_3 merge_W2_0" intLanes=":hwy_W2_0_0 :hwy_W2_0_1 :hwy_W2_0_2 :hwy_W2_0_3 :hwy_W2_4_0" shape="917.82,52.80 917.82,40.00 917.79,39.71 917.16,36.57 913.21,37.47 910.30,38.28 907.90,38.98 905.49,39.52 902.53,39.87 898.50,40.00 898.50,56.00 902.65,55.76 905.68,55.17 910.63,53.63 913.67,53.04">
+        <request index="0" response="00000" foes="00000" cont="0" />
+        <request index="1" response="00000" foes="00000" cont="0" />
+        <request index="2" response="00000" foes="00000" cont="0" />
+        <request index="3" response="00000" foes="00000" cont="0" />
+        <request index="4" response="00000" foes="00000" cont="0" />
+    </junction>
+    <junction id="hwy_W2_end" type="priority" x="650.00" y="40.00" incLanes="hwy_W_s2_accel_0 hwy_W_s2_accel_1 hwy_W_s2_accel_2 hwy_W_s2_accel_3 hwy_W_s2_accel_4" intLanes=":hwy_W2_end_0_0 :hwy_W2_end_0_1 :hwy_W2_end_0_2 :hwy_W2_end_0_3" shape="654.00,56.00 654.00,40.00 646.00,40.00 646.00,52.80 649.03,53.63 650.97,55.17 652.21,55.76">
+        <request index="0" response="0000" foes="0000" cont="0" />
+        <request index="1" response="0000" foes="0000" cont="0" />
+        <request index="2" response="0000" foes="0000" cont="0" />
+        <request index="3" response="0000" foes="0000" cont="0" />
+    </junction>
+    <junction id="hwy_W_in" type="dead_end" x="3000.00" y="40.00" incLanes="" intLanes="" shape="3000.00,40.00 3000.00,52.80" />
+    <junction id="hwy_W_out" type="dead_end" x="0.00" y="40.00" incLanes="hwy_W_s3_0 hwy_W_s3_1 hwy_W_s3_2 hwy_W_s3_3" intLanes="" shape="0.00,52.80 0.00,40.00" />
+    <junction id="svc_E1" type="traffic_light" x="900.00" y="480.00" incLanes="svc_E_s1_0 svc_E_s1_1" intLanes=":svc_E1_0_0 :svc_E1_1_0 :svc_E1_1_1" shape="936.00,480.00 936.00,473.60 935.92,472.82 935.29,469.68 930.30,470.78 926.62,471.74 923.58,472.52 920.52,473.10 916.77,473.47 911.68,473.60 911.68,480.00">
+        <request index="0" response="000" foes="000" cont="0" />
+        <request index="1" response="000" foes="000" cont="0" />
+        <request index="2" response="000" foes="000" cont="0" />
+    </junction>
+    <junction id="svc_E2" type="traffic_light" x="1900.00" y="480.00" incLanes="svc_E_s2_0 svc_E_s2_1" intLanes=":svc_E2_0_0 :svc_E2_1_0 :svc_E2_1_1" shape="1936.00,480.00 1936.00,473.60 1935.92,472.82 1935.29,469.68 1930.30,470.78 1926.62,471.74 1923.58,472.52 1920.52,473.10 1916.77,473.47 1911.68,473.60 1911.68,480.00">
+        <request index="0" response="000" foes="000" cont="0" />
+        <request index="1" response="000" foes="000" cont="0" />
+        <request index="2" response="000" foes="000" cont="0" />
+    </junction>
+    <junction id="svc_E_in" type="dead_end" x="0.00" y="480.00" incLanes="" intLanes="" shape="0.00,480.00 0.00,473.60" />
+    <junction id="svc_E_out" type="dead_end" x="3000.00" y="480.00" incLanes="svc_E_s3_0 svc_E_s3_1" intLanes="" shape="3000.00,473.60 3000.00,480.00" />
+    <junction id="svc_W1" type="traffic_light" x="2100.00" y="0.00" incLanes="svc_W_s1_0 svc_W_s1_1" intLanes=":svc_W1_0_0 :svc_W1_1_0 :svc_W1_1_1" shape="2088.32,6.40 2088.32,0.00 2064.00,0.00 2064.00,6.40 2064.08,7.18 2064.71,10.32 2069.70,9.22 2073.38,8.26 2076.42,7.48 2079.48,6.90 2083.23,6.53">
+        <request index="0" response="000" foes="000" cont="0" />
+        <request index="1" response="000" foes="000" cont="0" />
+        <request index="2" response="000" foes="000" cont="0" />
+    </junction>
+    <junction id="svc_W2" type="traffic_light" x="1100.00" y="0.00" incLanes="svc_W_s2_0 svc_W_s2_1" intLanes=":svc_W2_0_0 :svc_W2_1_0 :svc_W2_1_1" shape="1088.32,6.40 1088.32,0.00 1064.00,0.00 1064.00,6.40 1064.08,7.18 1064.71,10.32 1069.70,9.22 1073.38,8.26 1076.42,7.48 1079.48,6.90 1083.23,6.53">
+        <request index="0" response="000" foes="000" cont="0" />
+        <request index="1" response="000" foes="000" cont="0" />
+        <request index="2" response="000" foes="000" cont="0" />
+    </junction>
+    <junction id="svc_W_in" type="dead_end" x="3000.00" y="0.00" incLanes="" intLanes="" shape="3000.00,0.00 3000.00,6.40" />
+    <junction id="svc_W_out" type="dead_end" x="0.00" y="0.00" incLanes="svc_W_s3_0 svc_W_s3_1" intLanes="" shape="0.00,6.40 0.00,0.00" />
+
+    <connection from="hwy_E_s1" to="hwy_E_s1_accel" fromLane="0" toLane="1" via=":hwy_E1_0_0" dir="s" state="M" />
+    <connection from="hwy_E_s1" to="hwy_E_s1_accel" fromLane="1" toLane="2" via=":hwy_E1_0_1" dir="s" state="M" />
+    <connection from="hwy_E_s1" to="hwy_E_s1_accel" fromLane="2" toLane="3" via=":hwy_E1_0_2" dir="s" state="M" />
+    <connection from="hwy_E_s1" to="hwy_E_s1_accel" fromLane="3" toLane="4" via=":hwy_E1_0_3" dir="s" state="M" />
+    <connection from="hwy_E_s1_accel" to="hwy_E_s2" fromLane="1" toLane="0" via=":hwy_E1_end_0_0" dir="s" state="M" />
+    <connection from="hwy_E_s1_accel" to="hwy_E_s2" fromLane="2" toLane="1" via=":hwy_E1_end_0_1" dir="s" state="M" />
+    <connection from="hwy_E_s1_accel" to="hwy_E_s2" fromLane="3" toLane="2" via=":hwy_E1_end_0_2" dir="s" state="M" />
+    <connection from="hwy_E_s1_accel" to="hwy_E_s2" fromLane="4" toLane="3" via=":hwy_E1_end_0_3" dir="s" state="M" />
+    <connection from="hwy_E_s2" to="hwy_E_s2_accel" fromLane="0" toLane="1" via=":hwy_E2_0_0" dir="s" state="M" />
+    <connection from="hwy_E_s2" to="hwy_E_s2_accel" fromLane="1" toLane="2" via=":hwy_E2_0_1" dir="s" state="M" />
+    <connection from="hwy_E_s2" to="hwy_E_s2_accel" fromLane="2" toLane="3" via=":hwy_E2_0_2" dir="s" state="M" />
+    <connection from="hwy_E_s2" to="hwy_E_s2_accel" fromLane="3" toLane="4" via=":hwy_E2_0_3" dir="s" state="M" />
+    <connection from="hwy_E_s2_accel" to="hwy_E_s3" fromLane="1" toLane="0" via=":hwy_E2_end_0_0" dir="s" state="M" />
+    <connection from="hwy_E_s2_accel" to="hwy_E_s3" fromLane="2" toLane="1" via=":hwy_E2_end_0_1" dir="s" state="M" />
+    <connection from="hwy_E_s2_accel" to="hwy_E_s3" fromLane="3" toLane="2" via=":hwy_E2_end_0_2" dir="s" state="M" />
+    <connection from="hwy_E_s2_accel" to="hwy_E_s3" fromLane="4" toLane="3" via=":hwy_E2_end_0_3" dir="s" state="M" />
+    <connection from="hwy_W_s1" to="hwy_W_s1_accel" fromLane="0" toLane="1" via=":hwy_W1_0_0" dir="s" state="M" />
+    <connection from="hwy_W_s1" to="hwy_W_s1_accel" fromLane="1" toLane="2" via=":hwy_W1_0_1" dir="s" state="M" />
+    <connection from="hwy_W_s1" to="hwy_W_s1_accel" fromLane="2" toLane="3" via=":hwy_W1_0_2" dir="s" state="M" />
+    <connection from="hwy_W_s1" to="hwy_W_s1_accel" fromLane="3" toLane="4" via=":hwy_W1_0_3" dir="s" state="M" />
+    <connection from="hwy_W_s1_accel" to="hwy_W_s2" fromLane="1" toLane="0" via=":hwy_W1_end_0_0" dir="s" state="M" />
+    <connection from="hwy_W_s1_accel" to="hwy_W_s2" fromLane="2" toLane="1" via=":hwy_W1_end_0_1" dir="s" state="M" />
+    <connection from="hwy_W_s1_accel" to="hwy_W_s2" fromLane="3" toLane="2" via=":hwy_W1_end_0_2" dir="s" state="M" />
+    <connection from="hwy_W_s1_accel" to="hwy_W_s2" fromLane="4" toLane="3" via=":hwy_W1_end_0_3" dir="s" state="M" />
+    <connection from="hwy_W_s2" to="hwy_W_s2_accel" fromLane="0" toLane="1" via=":hwy_W2_0_0" dir="s" state="M" />
+    <connection from="hwy_W_s2" to="hwy_W_s2_accel" fromLane="1" toLane="2" via=":hwy_W2_0_1" dir="s" state="M" />
+    <connection from="hwy_W_s2" to="hwy_W_s2_accel" fromLane="2" toLane="3" via=":hwy_W2_0_2" dir="s" state="M" />
+    <connection from="hwy_W_s2" to="hwy_W_s2_accel" fromLane="3" toLane="4" via=":hwy_W2_0_3" dir="s" state="M" />
+    <connection from="hwy_W_s2_accel" to="hwy_W_s3" fromLane="1" toLane="0" via=":hwy_W2_end_0_0" dir="s" state="M" />
+    <connection from="hwy_W_s2_accel" to="hwy_W_s3" fromLane="2" toLane="1" via=":hwy_W2_end_0_1" dir="s" state="M" />
+    <connection from="hwy_W_s2_accel" to="hwy_W_s3" fromLane="3" toLane="2" via=":hwy_W2_end_0_2" dir="s" state="M" />
+    <connection from="hwy_W_s2_accel" to="hwy_W_s3" fromLane="4" toLane="3" via=":hwy_W2_end_0_3" dir="s" state="M" />
+    <connection from="merge_E1" to="hwy_E_s1_accel" fromLane="0" toLane="0" via=":hwy_E1_4_0" dir="s" state="M" />
+    <connection from="merge_E2" to="hwy_E_s2_accel" fromLane="0" toLane="0" via=":hwy_E2_4_0" dir="s" state="M" />
+    <connection from="merge_W1" to="hwy_W_s1_accel" fromLane="0" toLane="0" via=":hwy_W1_4_0" dir="s" state="M" />
+    <connection from="merge_W2" to="hwy_W_s2_accel" fromLane="0" toLane="0" via=":hwy_W2_4_0" dir="s" state="M" />
+    <connection from="svc_E_s1" to="merge_E1" fromLane="0" toLane="0" via=":svc_E1_0_0" tl="E1" linkIndex="0" dir="R" state="O" />
+    <connection from="svc_E_s1" to="svc_E_s2" fromLane="0" toLane="0" via=":svc_E1_1_0" tl="E1" linkIndex="1" dir="s" state="O" />
+    <connection from="svc_E_s1" to="svc_E_s2" fromLane="1" toLane="1" via=":svc_E1_1_1" tl="E1" linkIndex="2" dir="s" state="O" />
+    <connection from="svc_E_s2" to="merge_E2" fromLane="0" toLane="0" via=":svc_E2_0_0" tl="E2" linkIndex="0" dir="R" state="O" />
+    <connection from="svc_E_s2" to="svc_E_s3" fromLane="0" toLane="0" via=":svc_E2_1_0" tl="E2" linkIndex="1" dir="s" state="O" />
+    <connection from="svc_E_s2" to="svc_E_s3" fromLane="1" toLane="1" via=":svc_E2_1_1" tl="E2" linkIndex="2" dir="s" state="O" />
+    <connection from="svc_W_s1" to="merge_W1" fromLane="0" toLane="0" via=":svc_W1_0_0" tl="W1" linkIndex="0" dir="R" state="O" />
+    <connection from="svc_W_s1" to="svc_W_s2" fromLane="0" toLane="0" via=":svc_W1_1_0" tl="W1" linkIndex="1" dir="s" state="O" />
+    <connection from="svc_W_s1" to="svc_W_s2" fromLane="1" toLane="1" via=":svc_W1_1_1" tl="W1" linkIndex="2" dir="s" state="O" />
+    <connection from="svc_W_s2" to="merge_W2" fromLane="0" toLane="0" via=":svc_W2_0_0" tl="W2" linkIndex="0" dir="R" state="O" />
+    <connection from="svc_W_s2" to="svc_W_s3" fromLane="0" toLane="0" via=":svc_W2_1_0" tl="W2" linkIndex="1" dir="s" state="O" />
+    <connection from="svc_W_s2" to="svc_W_s3" fromLane="1" toLane="1" via=":svc_W2_1_1" tl="W2" linkIndex="2" dir="s" state="O" />
+
+    <connection from=":hwy_E1_0" to="hwy_E_s1_accel" fromLane="0" toLane="1" dir="s" state="M" />
+    <connection from=":hwy_E1_0" to="hwy_E_s1_accel" fromLane="1" toLane="2" dir="s" state="M" />
+    <connection from=":hwy_E1_0" to="hwy_E_s1_accel" fromLane="2" toLane="3" dir="s" state="M" />
+    <connection from=":hwy_E1_0" to="hwy_E_s1_accel" fromLane="3" toLane="4" dir="s" state="M" />
+    <connection from=":hwy_E1_4" to="hwy_E_s1_accel" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":hwy_E1_end_0" to="hwy_E_s2" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":hwy_E1_end_0" to="hwy_E_s2" fromLane="1" toLane="1" dir="s" state="M" />
+    <connection from=":hwy_E1_end_0" to="hwy_E_s2" fromLane="2" toLane="2" dir="s" state="M" />
+    <connection from=":hwy_E1_end_0" to="hwy_E_s2" fromLane="3" toLane="3" dir="s" state="M" />
+    <connection from=":hwy_E2_0" to="hwy_E_s2_accel" fromLane="0" toLane="1" dir="s" state="M" />
+    <connection from=":hwy_E2_0" to="hwy_E_s2_accel" fromLane="1" toLane="2" dir="s" state="M" />
+    <connection from=":hwy_E2_0" to="hwy_E_s2_accel" fromLane="2" toLane="3" dir="s" state="M" />
+    <connection from=":hwy_E2_0" to="hwy_E_s2_accel" fromLane="3" toLane="4" dir="s" state="M" />
+    <connection from=":hwy_E2_4" to="hwy_E_s2_accel" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":hwy_E2_end_0" to="hwy_E_s3" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":hwy_E2_end_0" to="hwy_E_s3" fromLane="1" toLane="1" dir="s" state="M" />
+    <connection from=":hwy_E2_end_0" to="hwy_E_s3" fromLane="2" toLane="2" dir="s" state="M" />
+    <connection from=":hwy_E2_end_0" to="hwy_E_s3" fromLane="3" toLane="3" dir="s" state="M" />
+    <connection from=":hwy_W1_0" to="hwy_W_s1_accel" fromLane="0" toLane="1" dir="s" state="M" />
+    <connection from=":hwy_W1_0" to="hwy_W_s1_accel" fromLane="1" toLane="2" dir="s" state="M" />
+    <connection from=":hwy_W1_0" to="hwy_W_s1_accel" fromLane="2" toLane="3" dir="s" state="M" />
+    <connection from=":hwy_W1_0" to="hwy_W_s1_accel" fromLane="3" toLane="4" dir="s" state="M" />
+    <connection from=":hwy_W1_4" to="hwy_W_s1_accel" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":hwy_W1_end_0" to="hwy_W_s2" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":hwy_W1_end_0" to="hwy_W_s2" fromLane="1" toLane="1" dir="s" state="M" />
+    <connection from=":hwy_W1_end_0" to="hwy_W_s2" fromLane="2" toLane="2" dir="s" state="M" />
+    <connection from=":hwy_W1_end_0" to="hwy_W_s2" fromLane="3" toLane="3" dir="s" state="M" />
+    <connection from=":hwy_W2_0" to="hwy_W_s2_accel" fromLane="0" toLane="1" dir="s" state="M" />
+    <connection from=":hwy_W2_0" to="hwy_W_s2_accel" fromLane="1" toLane="2" dir="s" state="M" />
+    <connection from=":hwy_W2_0" to="hwy_W_s2_accel" fromLane="2" toLane="3" dir="s" state="M" />
+    <connection from=":hwy_W2_0" to="hwy_W_s2_accel" fromLane="3" toLane="4" dir="s" state="M" />
+    <connection from=":hwy_W2_4" to="hwy_W_s2_accel" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":hwy_W2_end_0" to="hwy_W_s3" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":hwy_W2_end_0" to="hwy_W_s3" fromLane="1" toLane="1" dir="s" state="M" />
+    <connection from=":hwy_W2_end_0" to="hwy_W_s3" fromLane="2" toLane="2" dir="s" state="M" />
+    <connection from=":hwy_W2_end_0" to="hwy_W_s3" fromLane="3" toLane="3" dir="s" state="M" />
+    <connection from=":svc_E1_0" to="merge_E1" fromLane="0" toLane="0" dir="R" state="M" />
+    <connection from=":svc_E1_1" to="svc_E_s2" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":svc_E1_1" to="svc_E_s2" fromLane="1" toLane="1" dir="s" state="M" />
+    <connection from=":svc_E2_0" to="merge_E2" fromLane="0" toLane="0" dir="R" state="M" />
+    <connection from=":svc_E2_1" to="svc_E_s3" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":svc_E2_1" to="svc_E_s3" fromLane="1" toLane="1" dir="s" state="M" />
+    <connection from=":svc_W1_0" to="merge_W1" fromLane="0" toLane="0" dir="R" state="M" />
+    <connection from=":svc_W1_1" to="svc_W_s2" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":svc_W1_1" to="svc_W_s2" fromLane="1" toLane="1" dir="s" state="M" />
+    <connection from=":svc_W2_0" to="merge_W2" fromLane="0" toLane="0" dir="R" state="M" />
+    <connection from=":svc_W2_1" to="svc_W_s3" fromLane="0" toLane="0" dir="s" state="M" />
+    <connection from=":svc_W2_1" to="svc_W_s3" fromLane="1" toLane="1" dir="s" state="M" />
+
+</net>

@@ -1,0 +1,56 @@
+{
+  "experiment_id": "d82e06fb-07c7-4e9b-a0fd-59cd76449744",
+  "name": "comparison-07:49:20",
+  "seed": 42,
+  "status": "completed",
+  "current_run_idx": 1,
+  "runs": [
+    {
+      "run_id": "69a2f494-1f81-4eb2-b489-1f6c48f71b7f",
+      "config": {
+        "policy_type": "actuated",
+        "tick_rate": 1000,
+        "seed": 42,
+        "duration_ticks": null,
+        "demand_profile": "asym",
+        "total_vehicles": 3500,
+        "dominant_direction": "EW",
+        "gui": false,
+        "race_mode": true
+      },
+      "status": "completed",
+      "result": {
+        "clearance_s": 4634.0,
+        "avg_trip_time_s": 798.67,
+        "completed_trips": 5500,
+        "avg_control_delay_s": 0.0,
+        "throughput_veh_per_min": 0.01
+      },
+      "error": null
+    },
+    {
+      "run_id": "745f5dc5-b359-4165-b68d-a1c53632e862",
+      "config": {
+        "policy_type": "fixed_time",
+        "tick_rate": 1000,
+        "seed": 42,
+        "duration_ticks": null,
+        "demand_profile": "asym",
+        "total_vehicles": 3500,
+        "dominant_direction": "EW",
+        "gui": false,
+        "race_mode": true
+      },
+      "status": "completed",
+      "result": {
+        "clearance_s": 8713.0,
+        "avg_trip_time_s": 1104.26,
+        "completed_trips": 5500,
+        "avg_control_delay_s": 0.0,
+        "throughput_veh_per_min": 0.01
+      },
+      "error": null
+    }
+  ],
+  "created_at": 1777016960.5242062
+}
