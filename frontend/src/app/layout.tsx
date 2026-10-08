@@ -4,7 +4,9 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Marg Dhristhi | मार्ग दृष्टि - AI Traffic Management",
-  description: "Marg Dhristhi (मार्ग दृष्टि) - Next-Gen AI Traffic Management & Real-time Flow Orchestration",
+  description: "Marg Dhristhi (मार्ग दृष्टि) - Next-Gen AI Traffic Management & Real-time Flow Orchestration by Ayush Anupam",
+  authors: [{ name: "Ayush Anupam", url: "mailto:ayushanupamofficial7@gmail.com" }],
+  creator: "Ayush Anupam",
 };
 
 export default function RootLayout({

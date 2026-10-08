@@ -597,6 +597,14 @@ The complete capstone report — including methodology, full results, analysis, 
 
 ---
 
+## Creator & Contact Information
+
+- **Creator**: **Ayush Anupam**
+- **Email**: [ayushanupamofficial7@gmail.com](mailto:ayushanupamofficial7@gmail.com)
+- **Project**: Marg Dhristhi (मार्ग दृष्टि) - AI Traffic Management System
+
+---
+
 <div align="center">
-<sub>Built for the AI Engineering capstone at <a href="https://bau.edu.tr">Bahçeşehir University</a>, Istanbul — June 2026.</sub>
+<sub>Marg Dhristhi (मार्ग दृष्टि) — Created by <strong>Ayush Anupam</strong> (<a href="mailto:ayushanupamofficial7@gmail.com">ayushanupamofficial7@gmail.com</a>).</sub>
 </div>

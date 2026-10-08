@@ -2,6 +2,9 @@
 name = "traffic-management-system"
 version = "0.1.0"
 description = "AI-based traffic management and monitoring system"
+authors = [
+    { name = "Ayush Anupam", email = "ayushanupamofficial7@gmail.com" },
+]
 requires-python = ">=3.9"
 
 [tool.ruff]

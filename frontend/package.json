@@ -2,6 +2,7 @@
   "name": "traffic-dashboard",
   "version": "0.1.0",
   "private": true,
+  "author": "Ayush Anupam <ayushanupamofficial7@gmail.com>",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

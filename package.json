@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Marg Dhristhi - AI Traffic Management System",
+  "author": "Ayush Anupam <ayushanupamofficial7@gmail.com>",
   "scripts": {
     "dev": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",

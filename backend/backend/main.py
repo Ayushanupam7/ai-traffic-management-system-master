@@ -40,11 +40,22 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS for frontend
+# CORS for frontend (supports local dev, Vercel deployments, and custom domains)
+import os
+
+_allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "").strip()
+if _allowed_origins_env == "*":
+    _origins = ["*"]
+elif _allowed_origins_env:
+    _origins = [o.strip() for o in _allowed_origins_env.split(",") if o.strip()]
+else:
+    _origins = [f"http://localhost:{p}" for p in range(3000, 3010)] + \
+               [f"http://127.0.0.1:{p}" for p in range(3000, 3010)]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f"http://localhost:{p}" for p in range(3000, 3010)] +
-                  [f"http://127.0.0.1:{p}" for p in range(3000, 3010)],
+    allow_origins=_origins,
+    allow_origin_regex=r"^https:\/\/.*\.vercel\.app$" if _allowed_origins_env != "*" else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

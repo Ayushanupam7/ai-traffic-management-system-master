@@ -182,8 +182,8 @@ export default function UrbanFlow3D() {
 
   const isEvCamActive = Boolean(
     (evCameraMode && evCameraMode !== "none") ||
-    cameraPreset === "ev" ||
-    (activeEvVehicle && cameraPreset === "ev")
+    (cameraPreset as string) === "ev" ||
+    (activeEvVehicle && (cameraPreset as string) === "ev")
   );
 
   const cameraPresetRef = useRef<CameraPreset>(cameraPreset);

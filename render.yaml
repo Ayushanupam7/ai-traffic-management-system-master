@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: marg-dhristhi-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: .
+    plan: standard
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: SUMO_HOME
+        value: "/usr/share/sumo"
+      - key: SUMO_BINARY
+        value: "sumo"
+      - key: ALLOWED_ORIGINS
+        value: "*"
