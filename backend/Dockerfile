@@ -29,6 +29,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     -e packages/sumo-engine \
     -e packages/adaptive-policy \
     -e packages/cv-pipeline \
+    -e packages/carla-bridge \
     -e backend \
     ultralytics
 

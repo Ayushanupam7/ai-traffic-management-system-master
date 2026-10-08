@@ -13,6 +13,7 @@ dependencies = [
     "sumo-engine",
     "adaptive-policy",
     "cv-pipeline",
+    "carla-bridge",
 ]
 
 [build-system]
