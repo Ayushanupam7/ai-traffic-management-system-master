@@ -111,9 +111,21 @@ interface Props {
 export default function HighwayMeterMap({ showHeat = true }: Props) {
   const intersections = useTrafficStore((s) => s.intersections);
   const vehicles      = useTrafficStore((s) => s.vehicles);
+  const themeMode     = useTrafficStore((s) => s.themeMode);
+  const isDay         = themeMode === "day";
 
   const byId = new Map(intersections.map((i) => [i.id, i]));
   METER_IDS.forEach((id) => { if (!byId.has(id)) byId.set(id, makePlaceholder(id)); });
+
+  // Light/Dark cartography tokens
+  const blockFill   = isDay ? "#f8fafc" : "#0d1421";
+  const bldgFill    = isDay ? "#ffffff" : "#0f1a2e";
+  const bldgStroke  = isDay ? "#cbd5e1" : "#1e2e4a";
+  const roadFill    = isDay ? "#1e293b" : "#101b2e";
+  const shoulderFill = isDay ? "#e2e8f0" : "#1a2740";
+  const medianFill  = isDay ? "#cbd5e1" : "#1a2740";
+  const dashStroke  = isDay ? "#ffffff" : "#1e3048";
+  const textFill    = isDay ? "#64748b" : "#3b4a6b";
 
   // Service-road queue colors a faint overlay so the user sees where cars
   // are piling up when the meter restricts them. svc-E queue lives in
@@ -140,8 +152,8 @@ export default function HighwayMeterMap({ showHeat = true }: Props) {
   return (
     <>
       {/* Decorative background — city blocks above E-svc and below W-svc */}
-      <rect x={0}   y={0}   width={900} height={180} fill="#0d1421" />
-      <rect x={0}   y={420} width={900} height={180} fill="#0d1421" />
+      <rect x={0}   y={0}   width={900} height={180} fill={blockFill} />
+      <rect x={0}   y={420} width={900} height={180} fill={blockFill} />
       {[
         [30,30,80,40],[140,40,55,35],[220,25,80,50],[330,35,60,35],
         [510,30,80,45],[620,40,55,30],[700,25,80,40],[810,35,60,40],
@@ -152,33 +164,33 @@ export default function HighwayMeterMap({ showHeat = true }: Props) {
         [30,500,90,45],[150,510,60,40],[260,495,70,50],[360,505,55,35],
         [510,500,80,50],[640,510,60,35],[720,495,80,40],[820,505,55,40],
       ].map(([x, y, w, h], i) => (
-        <rect key={i} x={x} y={y} width={w} height={h} fill="#0f1a2e" rx={2} />
+        <rect key={i} x={x} y={y} width={w} height={h} fill={bldgFill} stroke={bldgStroke} strokeWidth={1} rx={4} />
       ))}
 
       {/* ── E-side: service road right above the E-bound highway ── */}
-      <rect x={0} y={195} width={900} height={20} fill="#101b2e" />  {/* E-svc band */}
-      <line x1={0} y1={205} x2={900} y2={205} stroke="#1e3048" strokeWidth={1.0} strokeDasharray="14 10" />
+      <rect x={0} y={195} width={900} height={20} fill={roadFill} />  {/* E-svc band */}
+      <line x1={0} y1={205} x2={900} y2={205} stroke={dashStroke} strokeWidth={1.0} strokeDasharray="14 10" />
       {/* shoulder strip between svc and hwy */}
-      <rect x={0} y={215} width={900} height={5} fill="#1a2740" />
-      <rect x={0} y={220} width={900} height={32} fill="#101b2e" />  {/* E-hwy band */}
+      <rect x={0} y={215} width={900} height={5} fill={shoulderFill} />
+      <rect x={0} y={220} width={900} height={32} fill={roadFill} />  {/* E-hwy band */}
       {/* E-hwy lane dashes (3 interior) */}
       {[228, 236, 244].map((y, i) => (
         <line key={`elE-${i}`} x1={0} y1={y} x2={900} y2={y}
-              stroke="#1e3048" strokeWidth={1.0} strokeDasharray="16 12" />
+              stroke={dashStroke} strokeWidth={1.0} strokeDasharray="16 12" />
       ))}
 
       {/* Median */}
-      <rect x={0} y={270} width={900} height={55} fill="#1a2740" />
+      <rect x={0} y={270} width={900} height={55} fill={medianFill} />
 
       {/* ── W-side: highway above, service road right below ── */}
-      <rect x={0} y={345} width={900} height={32} fill="#101b2e" />  {/* W-hwy band */}
+      <rect x={0} y={345} width={900} height={32} fill={roadFill} />  {/* W-hwy band */}
       {[357, 365, 373].map((y, i) => (
         <line key={`elW-${i}`} x1={0} y1={y} x2={900} y2={y}
-              stroke="#1e3048" strokeWidth={1.0} strokeDasharray="16 12" />
+              stroke={dashStroke} strokeWidth={1.0} strokeDasharray="16 12" />
       ))}
-      <rect x={0} y={380} width={900} height={5} fill="#1a2740" />   {/* shoulder */}
-      <rect x={0} y={385} width={900} height={20} fill="#101b2e" />  {/* W-svc band */}
-      <line x1={0} y1={395} x2={900} y2={395} stroke="#1e3048" strokeWidth={1.0} strokeDasharray="14 10" />
+      <rect x={0} y={380} width={900} height={5} fill={shoulderFill} />   {/* shoulder */}
+      <rect x={0} y={385} width={900} height={20} fill={roadFill} />  {/* W-svc band */}
+      <line x1={0} y1={395} x2={900} y2={395} stroke={dashStroke} strokeWidth={1.0} strokeDasharray="14 10" />
 
       {/* Heat tint over the service roads when queues build (shows meter effect) */}
       {showHeat && eHeat && (

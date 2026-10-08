@@ -7,9 +7,9 @@ import type {
   PolicyType,
 } from "@/lib/types";
 
-const LABEL = "text-[10px] text-gray-500 uppercase tracking-wider";
+const LABEL = "text-[10px] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider";
 const SELECT =
-  "w-full mt-1 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm";
+  "w-full mt-1 bg-slate-50 dark:bg-[#131b2a] border border-slate-300 dark:border-gray-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-gray-100 outline-none focus:border-blue-500 transition-colors font-medium";
 
 const DEFAULT_POLICY_OPTIONS: PolicyType[] = ["fixed_time", "actuated"];
 
@@ -85,10 +85,10 @@ export function DominantField({
       type="button"
       onClick={() => onChange(dir)}
       disabled={disabled}
-      className={`flex-1 rounded px-2 py-1 text-xs border transition ${
+      className={`flex-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold border transition-all ${
         value === dir
-          ? "bg-blue-700 border-blue-500 text-white"
-          : "bg-gray-900 border-gray-700 text-gray-400"
+          ? "bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-500/20"
+          : "bg-slate-100 dark:bg-[#131b2a] border-slate-200 dark:border-gray-700/80 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-800"
       } disabled:opacity-50`}
     >
       {label}
@@ -118,7 +118,9 @@ export function CarsField({
     <label className="block">
       <div className="flex items-center justify-between">
         <span className={LABEL}>Total Vehicles</span>
-        <span className="text-xs font-mono text-gray-300">{value}</span>
+        <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/40">
+          {value.toLocaleString()}
+        </span>
       </div>
       <input
         type="range"
@@ -128,7 +130,7 @@ export function CarsField({
         value={value}
         onChange={(e) => onChange(parseInt(e.target.value, 10))}
         disabled={disabled}
-        className="w-full mt-1"
+        className="w-full mt-1.5 accent-blue-600 cursor-pointer h-1.5 bg-slate-200 dark:bg-gray-700 rounded-lg"
       />
     </label>
   );
@@ -147,7 +149,9 @@ export function CarlaCarsField({
     <label className="block">
       <div className="flex items-center justify-between">
         <span className={LABEL}>CARLA Vehicles</span>
-        <span className="text-xs font-mono text-gray-300">{value}</span>
+        <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/40">
+          {value}
+        </span>
       </div>
       <input
         type="range"
@@ -157,11 +161,12 @@ export function CarlaCarsField({
         value={value}
         onChange={(e) => onChange(parseInt(e.target.value, 10))}
         disabled={disabled}
-        className="w-full mt-1"
+        className="w-full mt-1.5 accent-blue-600 cursor-pointer h-1.5 bg-slate-200 dark:bg-gray-700 rounded-lg"
       />
-      <span className="text-[10px] text-gray-500">
+      <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1 block">
         TrafficManager autopilot — keep ≤120 on a 1660 Ti.
       </span>
     </label>
   );
 }
+

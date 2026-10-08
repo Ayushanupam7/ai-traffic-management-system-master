@@ -118,12 +118,23 @@ const ALL_INTERSECTIONS = [
 export default function CombinedMap({ showHeat }: Props) {
   const intersections = useTrafficStore((s) => s.intersections);
   const vehicles      = useTrafficStore((s) => s.vehicles);
+  const themeMode     = useTrafficStore((s) => s.themeMode);
+  const isDay         = themeMode === "day";
 
   const byId = new Map(intersections.map((i) => [i.id, i]));
   ALL_INTERSECTIONS.forEach((id) => {
     if (!byId.has(id)) byId.set(id, makePlaceholder(id));
   });
   const at = (id: string) => byId.get(id)!;
+
+  // Cartography tokens
+  const blockFill   = isDay ? "#f8fafc" : "#0d1421";
+  const bldgFill    = isDay ? "#ffffff" : "#0f1a2e";
+  const bldgStroke  = isDay ? "#cbd5e1" : "#1e2e4a";
+  const crossFill   = isDay ? "#1e293b" : "#111d2e";
+  const roadFill    = isDay ? "#1e293b" : "#101b2e";
+  const shoulderFill = isDay ? "#e2e8f0" : "#1a2740";
+  const dashStroke  = isDay ? "#ffffff" : "#1e3048";
 
   // Highway-side queue tint (matches HighwayMeterMap's effect).
   const eSvcQueue = Math.max(
@@ -152,21 +163,19 @@ export default function CombinedMap({ showHeat }: Props) {
     <>
       {/* =========================================================
           1. Background — city blocks above, between, and below the
-             two corridors.  Two layers: large dark band, then
-             scattered "building footprint" rects on top.
+             two corridors.
           ========================================================= */}
 
       {/* Sky region above E-band (y=0..E_BAND_TOP) */}
-      <rect x={0} y={0} width={SVG_W} height={E_BAND_TOP} fill="#0d1421" />
+      <rect x={0} y={0} width={SVG_W} height={E_BAND_TOP} fill={blockFill} />
       {/* Median region between E-band and W-band */}
       <rect x={0} y={E_BAND_TOP + BAND_H} width={SVG_W}
-            height={W_BAND_TOP - (E_BAND_TOP + BAND_H)} fill="#0d1421" />
+            height={W_BAND_TOP - (E_BAND_TOP + BAND_H)} fill={blockFill} />
       {/* Below W-band */}
       <rect x={0} y={W_BAND_TOP + BAND_H} width={SVG_W}
-            height={SVG_H - (W_BAND_TOP + BAND_H)} fill="#0d1421" />
+            height={SVG_H - (W_BAND_TOP + BAND_H)} fill={blockFill} />
 
-      {/* Scattered building footprints. Hand-placed to feel city-like
-          without being literal. */}
+      {/* Scattered building footprints */}
       {[
         // Above E-band (sky region)
         [40,30,90,38],[160,40,60,32],[260,25,80,42],[380,35,55,28],
@@ -201,42 +210,36 @@ export default function CombinedMap({ showHeat }: Props) {
         [1430,375,90,38],[1540,385,60,30],
       ].map(([x, y, w, h], i) => (
         <rect key={`bld-${i}`} x={x} y={y} width={w} height={h}
-              fill="#0f1a2e" rx={2} />
+              fill={bldgFill} stroke={bldgStroke} strokeWidth={1} rx={4} />
       ))}
 
       {/* =========================================================
           2. Cross-streets — vertical bands at A, B, C (grid only)
-             Drawn BEFORE the horizontal corridors so the corridors
-             paint over the intersection windows.
           ========================================================= */}
       {COL_CENTRES.map((col) => (
         <rect key={`cross-${col}`}
               x={CROSS_X_LEFT(col)} y={0}
               width={CROSS_W} height={SVG_H}
-              fill="#111d2e" />
+              fill={crossFill} />
       ))}
 
       {/* =========================================================
-          3. Corridor asphalt bands — single continuous E-bound and
-             W-bound bands spanning the whole map. The freeway,
-             feeder, and arterial all share one band per direction
-             so the visual flow is seamless.
+          3. Corridor asphalt bands
           ========================================================= */}
       {/* E-bound (north) */}
-      <rect x={0} y={E_BAND_TOP} width={SVG_W} height={BAND_H} fill="#101b2e" />
+      <rect x={0} y={E_BAND_TOP} width={SVG_W} height={BAND_H} fill={roadFill} />
       {/* W-bound (south) */}
-      <rect x={0} y={W_BAND_TOP} width={SVG_W} height={BAND_H} fill="#101b2e" />
+      <rect x={0} y={W_BAND_TOP} width={SVG_W} height={BAND_H} fill={roadFill} />
 
-      {/* Shoulder strips inside each band — separates highway (4 lane) area
-          from the arterial (3 lane) area subtly. */}
-      <rect x={0} y={E_BAND_TOP + BAND_H - 4} width={SVG_W} height={2} fill="#1a2740" />
-      <rect x={0} y={E_BAND_TOP + 2}          width={SVG_W} height={2} fill="#1a2740" />
-      <rect x={0} y={W_BAND_TOP + BAND_H - 4} width={SVG_W} height={2} fill="#1a2740" />
-      <rect x={0} y={W_BAND_TOP + 2}          width={SVG_W} height={2} fill="#1a2740" />
+      {/* Shoulder strips inside each band */}
+      <rect x={0} y={E_BAND_TOP + BAND_H - 4} width={SVG_W} height={2} fill={shoulderFill} />
+      <rect x={0} y={E_BAND_TOP + 2}          width={SVG_W} height={2} fill={shoulderFill} />
+      <rect x={0} y={W_BAND_TOP + BAND_H - 4} width={SVG_W} height={2} fill={shoulderFill} />
+      <rect x={0} y={W_BAND_TOP + 2}          width={SVG_W} height={2} fill={shoulderFill} />
 
-      {/* Median strip between the two directions — wide center, dim color */}
+      {/* Median strip between the two directions */}
       <rect x={0} y={E_BAND_TOP + BAND_H} width={SVG_W}
-            height={W_BAND_TOP - (E_BAND_TOP + BAND_H)} fill="#0d1421" />
+            height={W_BAND_TOP - (E_BAND_TOP + BAND_H)} fill={blockFill} />
 
       {/* =========================================================
           4. Heat overlays — match HighwayMeterMap (svc queue tint)
@@ -285,21 +288,20 @@ export default function CombinedMap({ showHeat }: Props) {
           ========================================================= */}
       {[E_BAND_CY - 14, E_BAND_CY, E_BAND_CY + 14].map((y, i) => (
         <line key={`elE-${i}`} x1={0} y1={y} x2={SVG_W} y2={y}
-              stroke="#1e3048" strokeWidth={1.0} strokeDasharray="16 12" />
+              stroke={dashStroke} strokeWidth={1.2} strokeDasharray="16 12" />
       ))}
       {[W_BAND_CY - 14, W_BAND_CY, W_BAND_CY + 14].map((y, i) => (
         <line key={`elW-${i}`} x1={0} y1={y} x2={SVG_W} y2={y}
-              stroke="#1e3048" strokeWidth={1.0} strokeDasharray="16 12" />
+              stroke={dashStroke} strokeWidth={1.2} strokeDasharray="16 12" />
       ))}
 
-      {/* Median accents on the ARTERIAL portion (east of the feeder).
-          Two solid lines at ±1.5 px to mimic SumoGrid's double centerline. */}
+      {/* Median accents on the ARTERIAL portion (east of the feeder). */}
       {([E_BAND_CY, W_BAND_CY] as const).map((cy, i) => (
         <g key={`med-${i}`}>
           <line x1={wx(GRID_LEFT)} y1={cy - 1.5} x2={SVG_W} y2={cy - 1.5}
-                stroke="#3a5a82" strokeWidth={1.0} />
+                stroke="#f59e0b" strokeWidth={1.0} />
           <line x1={wx(GRID_LEFT)} y1={cy + 1.5} x2={SVG_W} y2={cy + 1.5}
-                stroke="#3a5a82" strokeWidth={1.0} />
+                stroke="#f59e0b" strokeWidth={1.0} />
         </g>
       ))}
 
@@ -309,13 +311,13 @@ export default function CombinedMap({ showHeat }: Props) {
         return (
           <g key={`vdash-${col}`}>
             <line x1={xC - CROSS_HALF + 8} y1={0} x2={xC - CROSS_HALF + 8} y2={SVG_H}
-                  stroke="#1e3048" strokeWidth={1.0} strokeDasharray="18 12" />
+                  stroke={dashStroke} strokeWidth={1.2} strokeDasharray="18 12" />
             <line x1={xC + CROSS_HALF - 8} y1={0} x2={xC + CROSS_HALF - 8} y2={SVG_H}
-                  stroke="#1e3048" strokeWidth={1.0} strokeDasharray="18 12" />
+                  stroke={dashStroke} strokeWidth={1.2} strokeDasharray="18 12" />
             <line x1={xC - 1.5} y1={0} x2={xC - 1.5} y2={SVG_H}
-                  stroke="#3a5a82" strokeWidth={1.0} />
+                  stroke="#f59e0b" strokeWidth={1.0} />
             <line x1={xC + 1.5} y1={0} x2={xC + 1.5} y2={SVG_H}
-                  stroke="#3a5a82" strokeWidth={1.0} />
+                  stroke="#f59e0b" strokeWidth={1.0} />
           </g>
         );
       })}

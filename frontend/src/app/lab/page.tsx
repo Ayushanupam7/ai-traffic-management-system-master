@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTrafficStore } from "@/store/trafficStore";
+import { FlaskConical, History, ArrowLeft } from "lucide-react";
 
 import ComparisonHistory from "@/components/Comparison/ComparisonHistory";
 import ComparisonProgress from "@/components/Comparison/ComparisonProgress";
@@ -49,6 +51,9 @@ function rowToConfig(row: BuilderRow, network: NetworkType): SimulationConfig {
 }
 
 export default function LabPage() {
+  const themeMode = useTrafficStore((s) => s.themeMode);
+  const isDay = themeMode === "day";
+
   const [seed, setSeed] = useState(42);
   const [network, setNetwork] = useState<NetworkType>("arterial");
   const [rows, setRows] = useState<BuilderRow[]>([
@@ -218,11 +223,21 @@ export default function LabPage() {
       experiment.status === "failed");
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      <aside className="w-80 flex-shrink-0 border-r border-gray-800 p-4 space-y-4 overflow-y-auto">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-          Past comparisons
-        </h2>
+    <div className={`flex-1 flex overflow-hidden transition-colors ${
+      isDay ? "bg-slate-100/60 text-slate-800" : "bg-[#060a0f] text-gray-100"
+    }`}>
+      {/* Left rail: Past Comparisons */}
+      <aside className={`w-80 flex-shrink-0 border-r flex flex-col p-4 space-y-4 overflow-y-auto transition-colors ${
+        isDay ? "bg-white/95 border-slate-200/90 shadow-xs" : "bg-[#0c1017]/95 border-gray-800/80"
+      }`}>
+        <div className="flex items-center gap-2">
+          <History className="w-4 h-4 text-blue-500" />
+          <h2 className={`text-xs font-bold uppercase tracking-wider ${
+            isDay ? "text-slate-600" : "text-gray-400"
+          }`}>
+            Past Comparisons
+          </h2>
+        </div>
         <ComparisonHistory
           items={history}
           activeId={activeId}
@@ -230,11 +245,21 @@ export default function LabPage() {
         />
       </aside>
 
+      {/* Main content: Comparison Builder & Results */}
       <main className="flex-1 p-8 space-y-6 overflow-y-auto">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-100">Simulation Lab</h1>
-          <p className="text-xs text-gray-500 mt-1">
-            Build comparison experiments, see results side-by-side, and revisit past runs.
+        <div className={`p-6 rounded-2xl border transition-all ${
+          isDay ? "bg-white border-slate-200/90 shadow-sm" : "bg-[#0c1017]/90 border-gray-800 shadow-lg"
+        }`}>
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <FlaskConical className="w-5 h-5 text-blue-500" />
+            <h1 className={`text-2xl font-black tracking-tight ${
+              isDay ? "text-slate-900" : "text-white"
+            }`}>
+              Simulation Lab
+            </h1>
+          </div>
+          <p className={`text-xs leading-relaxed ${isDay ? "text-slate-500" : "text-gray-400"}`}>
+            Orchestrate multi-policy A/B comparisons side-by-side, benchmark network resilience against diverse demand profiles, and inspect deep telemetry.
           </p>
         </div>
 
@@ -260,9 +285,14 @@ export default function LabPage() {
               <button
                 type="button"
                 onClick={clearSelection}
-                className="text-xs text-gray-400 hover:text-gray-200"
+                className={`text-xs font-semibold px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all ${
+                  isDay
+                    ? "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-xs"
+                    : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-750"
+                }`}
               >
-                ← Back to builder
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Return to Builder</span>
               </button>
             </div>
             <ComparisonProgress
@@ -270,9 +300,8 @@ export default function LabPage() {
               onCancel={cancelComparison}
             />
             {isActive && (
-              <p className="text-xs text-gray-500">
-                Runs execute sequentially on the shared simulator. Results will
-                appear below once complete.
+              <p className={`text-xs ${isDay ? "text-slate-500" : "text-gray-400"}`}>
+                Runs execute sequentially on the shared SUMO simulation engine. Results will compile below once completed.
               </p>
             )}
             {showResults && (

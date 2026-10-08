@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTrafficStore } from "@/store/trafficStore";
 
 import { api, cameraStreamUrl } from "@/lib/api";
 import type {
@@ -16,6 +17,8 @@ const ROTATION_MS = 4000;
 // Cycles through every calibrated intersection/approach in the list every
 // few seconds so the demo never has a blank canvas.
 export default function CameraCarousel() {
+  const themeMode = useTrafficStore((s) => s.themeMode);
+  const isDay = themeMode === "day";
   const [carlaStatus, setCarlaStatus] = useState<CameraStatus | null>(null);
   const [cams, setCams]               = useState<IntersectionCameras[]>([]);
   const [idx, setIdx]                 = useState(0);
@@ -57,15 +60,20 @@ export default function CameraCarousel() {
      current.cameras[0]?.approach ?? "N");
 
   return (
-    <div className="absolute top-3 right-3 w-[280px] z-10
-                    bg-[#0d1117] border border-gray-800 rounded-lg overflow-hidden
-                    shadow-xl">
-      <div className="flex items-center justify-between px-2.5 py-1.5
-                      border-b border-gray-800">
-        <div className="text-[10px] uppercase tracking-widest text-gray-500">
+    <div className={`absolute top-16 right-3 w-[280px] z-10 border rounded-xl overflow-hidden shadow-2xl backdrop-blur-md transition-all ${
+      isDay ? "bg-white/95 border-slate-200 text-slate-800" : "bg-[#0d1117]/95 border-gray-800 text-gray-200"
+    }`}>
+      <div className={`flex items-center justify-between px-3 py-2 border-b ${
+        isDay ? "border-slate-200 bg-slate-50/60" : "border-gray-800 bg-[#111827]/40"
+      }`}>
+        <div className={`text-[10px] uppercase tracking-widest font-bold ${
+          isDay ? "text-slate-500" : "text-gray-400"
+        }`}>
           Live cameras
         </div>
-        <div className="text-[9px] font-mono text-gray-600">
+        <div className={`text-[9px] font-mono font-bold ${
+          isDay ? "text-slate-600" : "text-gray-500"
+        }`}>
           {idx + 1}/{cams.length}
         </div>
       </div>
@@ -77,15 +85,17 @@ export default function CameraCarousel() {
           alt={`Camera at ${current.intersection_id}`}
           className="w-full block aspect-video object-cover bg-black"
         />
-        <div className="absolute bottom-1 left-2 right-2 flex items-baseline justify-between
+        <div className="absolute bottom-1.5 left-2 right-2 flex items-baseline justify-between
                         text-[10px] font-mono
-                        bg-black/60 px-1.5 py-0.5 rounded">
-          <span className="text-blue-300">{current.intersection_id}</span>
-          <span className="text-gray-400">{approach}-approach</span>
+                        bg-black/70 backdrop-blur-xs px-2 py-0.5 rounded-md">
+          <span className="text-blue-300 font-bold">{current.intersection_id}</span>
+          <span className="text-gray-300">{approach}-approach</span>
         </div>
       </div>
-      <div className="px-2.5 py-1 text-[9px] text-gray-600 font-mono border-t border-gray-800">
-        Auto-cycling every {ROTATION_MS / 1000}s · click an intersection for details
+      <div className={`px-2.5 py-1.5 text-[9px] font-medium border-t ${
+        isDay ? "text-slate-500 border-slate-200 bg-slate-50/40" : "text-gray-500 border-gray-800"
+      }`}>
+        Auto-cycling every {ROTATION_MS / 1000}s · click intersection to inspect
       </div>
     </div>
   );

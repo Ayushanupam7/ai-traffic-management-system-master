@@ -13,15 +13,17 @@ import {
 
 import type { ComparisonExperiment, ComparisonRun } from "@/lib/types";
 
+import { useTrafficStore } from "@/store/trafficStore";
+
 // Per-policy color palette — same hues used elsewhere in the dashboard
 // so the bar colors carry consistent meaning across pages.
 const POLICY_COLOR: Record<string, string> = {
-  fixed_time:  "#9ca3af",
-  actuated:    "#60a5fa",
+  fixed_time:  "#94a3b8",
+  actuated:    "#3b82f6",
   ramp_binary: "#f59e0b",
-  ramp_alinea: "#34d399",
+  ramp_alinea: "#10b981",
 };
-const POLICY_COLOR_FALLBACK = "#a78bfa";
+const POLICY_COLOR_FALLBACK = "#8b5cf6";
 
 type MetricKey =
   | "clearance_s"
@@ -89,6 +91,9 @@ export default function ComparisonCharts({
 }: {
   experiment: ComparisonExperiment;
 }) {
+  const themeMode = useTrafficStore((s) => s.themeMode);
+  const isDay = themeMode === "day";
+
   // Don't render at all if no runs have a result yet (e.g. cancelled
   // before the first run completed).
   const haveAnyResults = experiment.runs.some((r) => r.result != null);
@@ -96,16 +101,17 @@ export default function ComparisonCharts({
 
   return (
     <div className="space-y-3">
-      <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+      <h2 className={`text-xs font-semibold uppercase tracking-wider ${isDay ? "text-slate-500" : "text-gray-400"}`}>
         Comparison charts
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {METRICS.map((m) => (
-          <MetricChart key={m.key} metric={m} runs={experiment.runs} />
+          <MetricChart key={m.key} metric={m} runs={experiment.runs} isDay={isDay} />
         ))}
       </div>
-      <p className="text-[10px] text-gray-500">
-        Green bar = best value for that metric (lower is better except throughput).
+      <p className={`text-[11px] ${isDay ? "text-slate-500" : "text-gray-500"}`}>
+        <span className="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-500 mr-1.5 align-middle"></span>
+        Green bar = optimal value for that metric (lower is better except throughput).
       </p>
     </div>
   );
@@ -114,61 +120,70 @@ export default function ComparisonCharts({
 function MetricChart({
   metric,
   runs,
+  isDay,
 }: {
   metric: MetricDef;
   runs: ComparisonRun[];
+  isDay: boolean;
 }) {
   const data = buildData(runs, metric);
   // If every bar is null (e.g. clearance for time-limited runs), don't draw.
   const anyValue = data.some((d) => d.value != null);
 
   return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-3">
-      <div className="text-xs text-gray-300 mb-1">
+    <div className={`rounded-xl p-4 border transition-colors ${
+      isDay ? "bg-white border-slate-200 shadow-sm" : "bg-gray-900/60 border-gray-800"
+    }`}>
+      <div className={`text-xs font-medium mb-2 ${isDay ? "text-slate-800" : "text-gray-200"}`}>
         {metric.label}
-        <span className="ml-1 text-gray-600">({metric.unit})</span>
-        <span className="ml-2 text-[10px] text-gray-600 uppercase tracking-widest">
+        <span className={`ml-1 text-[11px] font-normal ${isDay ? "text-slate-400" : "text-gray-500"}`}>({metric.unit})</span>
+        <span className={`ml-2 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${
+          isDay ? "bg-slate-100 text-slate-600" : "bg-gray-800 text-gray-400"
+        }`}>
           {metric.lowerIsBetter ? "lower is better" : "higher is better"}
         </span>
       </div>
       {!anyValue ? (
-        <div className="h-56 flex items-center justify-center text-[11px] text-gray-600">
-          No data
+        <div className={`h-56 flex items-center justify-center text-xs ${isDay ? "text-slate-400" : "text-gray-500"}`}>
+          No data recorded
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={240}>
           <BarChart
             data={data}
-            margin={{ top: 8, right: 8, left: 0, bottom: 4 }}
+            margin={{ top: 8, right: 8, left: -10, bottom: 4 }}
             barCategoryGap="20%"
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+            <CartesianGrid strokeDasharray="3 3" stroke={isDay ? "#f1f5f9" : "#1f2937"} vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: "#9ca3af", fontSize: 10 }}
-              stroke="#374151"
+              tick={{ fill: isDay ? "#64748b" : "#9ca3af", fontSize: 10 }}
+              stroke={isDay ? "#cbd5e1" : "#374151"}
             />
             <YAxis
-              tick={{ fill: "#9ca3af", fontSize: 10 }}
-              stroke="#374151"
+              tick={{ fill: isDay ? "#64748b" : "#9ca3af", fontSize: 10 }}
+              stroke={isDay ? "#cbd5e1" : "#374151"}
               tickFormatter={(v) => v.toString()}
             />
             <Tooltip
               contentStyle={{
-                background: "#0d1117",
-                border: "1px solid #374151",
-                fontSize: 11,
+                background: isDay ? "#ffffff" : "#0d1117",
+                border: isDay ? "1px solid #e2e8f0" : "1px solid #374151",
+                borderRadius: "8px",
+                boxShadow: isDay ? "0 4px 12px rgba(0,0,0,0.06)" : "0 4px 12px rgba(0,0,0,0.4)",
+                fontSize: 12,
+                color: isDay ? "#0f172a" : "#f3f4f6",
               }}
-              labelStyle={{ color: "#d1d5db" }}
+              labelStyle={{ color: isDay ? "#334155" : "#9ca3af", fontWeight: 600 }}
               formatter={(v: number) => [fmt(v, metric.digits), metric.label]}
             />
-            <Bar dataKey="value" maxBarSize={80} isAnimationActive={false}>
+            <Bar dataKey="value" maxBarSize={64} radius={[4, 4, 0, 0]} isAnimationActive={false}>
               {data.map((d) => (
                 <Cell
                   key={d.index}
                   fill={
                     d.isBest
-                      ? "#22c55e"  // green-500
+                      ? "#10b981"  // emerald-500
                       : POLICY_COLOR[d.policy] ?? POLICY_COLOR_FALLBACK
                   }
                 />

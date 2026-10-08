@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTrafficStore } from "@/store/trafficStore";
 import { api, cameraStreamUrl } from "@/lib/api";
 import RegionEditor from "./RegionEditor";
 import type {
@@ -20,6 +21,8 @@ interface Props {
 }
 
 export default function PanelCameras({ intersectionId }: Props) {
+  const themeMode = useTrafficStore((s) => s.themeMode);
+  const isDay = themeMode === "day";
   const [status,   setStatus]   = useState<CameraStatus | null>(null);
   const [list,     setList]     = useState<IntersectionCameras | null>(null);
   const [approach, setApproach] = useState<CameraApproach>("N");
@@ -101,10 +104,14 @@ export default function PanelCameras({ intersectionId }: Props) {
               key={a}
               onClick={() => enabled && setApproach(a)}
               disabled={!enabled}
-              className={`flex-1 py-1.5 text-[10px] rounded-md border transition-colors font-medium ${
+              className={`flex-1 py-1.5 text-[10px] rounded-lg border transition-all font-semibold ${
                 isActive
-                  ? "bg-[#1e3a5f] border-blue-600 text-blue-200"
-                  : "bg-[#1f2937] border-gray-700 text-gray-500 hover:text-gray-300"
+                  ? isDay
+                    ? "bg-blue-600 border-blue-600 text-white shadow-xs"
+                    : "bg-[#1e3a5f] border-blue-600 text-blue-200"
+                  : isDay
+                    ? "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200"
+                    : "bg-[#1f2937] border-gray-700 text-gray-500 hover:text-gray-300"
               } disabled:opacity-30 disabled:cursor-not-allowed`}
             >
               {APPROACH_LABEL[a]}
@@ -113,8 +120,11 @@ export default function PanelCameras({ intersectionId }: Props) {
         })}
         <button
           onClick={() => setReloadTick((t) => t + 1)}
-          className="px-2.5 bg-[#1f2937] border border-gray-700 rounded-md text-gray-500
-                     hover:text-gray-200 text-xs transition-colors"
+          className={`px-2.5 rounded-lg border text-xs transition-colors ${
+            isDay
+              ? "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200"
+              : "bg-[#1f2937] border-gray-700 text-gray-500 hover:text-gray-200"
+          }`}
           title="Restart stream"
         >
           ⟳
@@ -122,10 +132,14 @@ export default function PanelCameras({ intersectionId }: Props) {
         {available.has(approach) && (
           <button
             onClick={() => setEditing((v) => !v)}
-            className={`px-2.5 rounded-md border text-[10px] transition-colors ${
+            className={`px-2.5 rounded-lg border text-[10px] font-semibold transition-all ${
               editing
-                ? "bg-[#1e3a5f] border-blue-600 text-blue-200"
-                : "bg-[#1f2937] border-gray-700 text-gray-400 hover:text-gray-200"
+                ? isDay
+                  ? "bg-blue-600 border-blue-600 text-white shadow-xs"
+                  : "bg-[#1e3a5f] border-blue-600 text-blue-200"
+                : isDay
+                  ? "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200"
+                  : "bg-[#1f2937] border-gray-700 text-gray-400 hover:text-gray-200"
             }`}
             title="Draw lanes + violation lines"
           >
@@ -141,10 +155,14 @@ export default function PanelCameras({ intersectionId }: Props) {
                 setReloadTick((t) => t + 1);
               } catch { /* ignore */ }
             }}
-            className={`px-2.5 rounded-md border text-[10px] transition-colors ${
+            className={`px-2.5 rounded-lg border text-[10px] font-semibold transition-all ${
               visionOn
-                ? "bg-[#10331f] border-green-700 text-green-300"
-                : "bg-[#1f2937] border-gray-700 text-gray-400 hover:text-gray-200"
+                ? isDay
+                  ? "bg-emerald-100 border-emerald-300 text-emerald-800"
+                  : "bg-[#10331f] border-green-700 text-green-300"
+                : isDay
+                  ? "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200"
+                  : "bg-[#1f2937] border-gray-700 text-gray-400 hover:text-gray-200"
             }`}
             title="Toggle YOLOv11m vision overlay + analytics"
           >
@@ -162,8 +180,9 @@ export default function PanelCameras({ intersectionId }: Props) {
           onClose={() => setEditing(false)}
         />
       ) : (
-      <div className="bg-black border border-gray-800 rounded-lg overflow-hidden aspect-video
-                      flex items-center justify-center">
+      <div className={`bg-black border rounded-xl overflow-hidden aspect-video flex items-center justify-center ${
+        isDay ? "border-slate-200 shadow-xs" : "border-gray-800"
+      }`}>
         {status?.connected && available.has(approach) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -178,7 +197,7 @@ export default function PanelCameras({ intersectionId }: Props) {
             }}
           />
         ) : (
-          <span className="text-xs text-gray-500">
+          <span className={`text-xs ${isDay ? "text-slate-400" : "text-gray-500"}`}>
             {status?.connected ? "No camera on this approach" : "Loading…"}
           </span>
         )}
@@ -187,7 +206,7 @@ export default function PanelCameras({ intersectionId }: Props) {
 
       {/* Footer: server info */}
       {status?.connected && (
-        <p className="text-[9px] text-gray-700">
+        <p className={`text-[9px] ${isDay ? "text-slate-500" : "text-gray-600"}`}>
           {status.town ?? "Unknown town"} · CARLA {status.server_version ?? "?"}
         </p>
       )}

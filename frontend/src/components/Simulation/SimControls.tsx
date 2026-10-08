@@ -27,7 +27,7 @@ import type {
 
 const ACTIVE_VARIANT_KEY = "traffic.activeVariantName";
 
-const LABEL = "text-[9px] text-gray-600 uppercase tracking-widest";
+const LABEL = "text-[10px] text-slate-600 dark:text-gray-400 font-bold uppercase tracking-wider";
 
 function ToggleBtn({
   active,
@@ -45,10 +45,10 @@ function ToggleBtn({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex-1 py-1.5 text-xs rounded-md border transition-colors font-medium disabled:opacity-40 ${
+      className={`flex-1 py-1.5 px-2 text-xs rounded-lg border transition-all font-bold disabled:opacity-40 disabled:cursor-not-allowed ${
         active
-          ? "bg-indigo-900 border-indigo-600 text-indigo-200"
-          : "bg-[#1f2937] border-gray-700 text-gray-400 hover:text-gray-200"
+          ? "bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-500/25"
+          : "bg-slate-100 hover:bg-slate-200/80 dark:bg-[#131b2a] dark:hover:bg-[#1e293b] border-slate-300/80 dark:border-gray-700/80 text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white"
       }`}
     >
       {children}
@@ -226,8 +226,6 @@ export default function SimControls() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="text-[9px] text-gray-600 uppercase tracking-widest">Simulation</div>
-
       {isIdle ? (
         <>
           {/* Mode */}
@@ -321,31 +319,29 @@ export default function SimControls() {
               )}
               <CarsField value={cars} onChange={setCars} />
 
-              <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+              <label className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-gray-300 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={gui}
                   onChange={(e) => setGui(e.target.checked)}
-                  className="accent-blue-500"
+                  className="accent-blue-600 w-4 h-4 rounded cursor-pointer"
                 />
-                Open SUMO window
+                Open SUMO Native GUI Window
               </label>
-              {/* Variant picker — hidden entirely when there are no saved
-                  variants for this family (avoids a useless one-option
-                  dropdown). A tiny 'create variants →' link still hints
-                  that this is a feature. */}
+
+              {/* Variant picker */}
               {showVariantPicker && familyVariants.length > 0 && (
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <div className={LABEL}>
                       Policy variant
-                      <span className="ml-1 normal-case tracking-normal text-gray-500">
+                      <span className="ml-1 normal-case tracking-normal text-slate-400 dark:text-gray-500">
                         ({variantFamily})
                       </span>
                     </div>
                     <Link
                       href="/policy"
-                      className="text-blue-400 hover:text-blue-300 text-[10px]"
+                      className="text-blue-600 dark:text-blue-400 hover:underline text-[11px] font-semibold"
                     >
                       manage →
                     </Link>
@@ -355,7 +351,7 @@ export default function SimControls() {
                       familyVariants.some((v) => v.name === activeName) ? activeName : ""
                     }
                     onChange={(e) => pickVariant(e.target.value)}
-                    className="w-full mt-1 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs font-mono text-gray-200"
+                    className="w-full mt-1 bg-slate-50 dark:bg-[#131b2a] border border-slate-300 dark:border-gray-700/80 rounded-lg px-2.5 py-1.5 text-xs font-mono font-medium text-slate-900 dark:text-gray-100 outline-none focus:border-blue-500"
                   >
                     <option value="">— defaults —</option>
                     {familyVariants.map((v) => (
@@ -369,9 +365,9 @@ export default function SimControls() {
               {showVariantPicker && familyVariants.length === 0 && (
                 <Link
                   href="/policy"
-                  className="text-[10px] text-gray-500 hover:text-blue-300"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
                 >
-                  create policy variants →
+                  Configure policy variants →
                 </Link>
               )}
             </>
@@ -379,14 +375,14 @@ export default function SimControls() {
             <CarlaCarsField value={carlaCars} onChange={setCarlaCars} />
           )}
 
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             <button
               onClick={handleStart}
               disabled={loading || (mode === "carla" && !carlaEnabled)}
-              className="flex-1 bg-[#14532d] hover:bg-green-800 border border-green-900 text-green-300
-                         rounded-md py-2 text-sm font-semibold disabled:opacity-50 transition-colors"
+              className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border border-emerald-500 text-white
+                         rounded-lg py-2.5 text-xs font-bold disabled:opacity-50 transition-all shadow-md shadow-emerald-600/20"
             >
-              {loading ? "Starting…" : "▶ Start"}
+              {loading ? "Starting Engine…" : "▶ Start Simulation"}
             </button>
             {/* Quick-restart — only after a previous successful run, only
                 when we're stopped. One click re-launches with the exact
@@ -396,8 +392,8 @@ export default function SimControls() {
                 onClick={handleQuickRestart}
                 disabled={loading}
                 title="Re-run with the same config"
-                className="bg-[#1e3a5f] hover:bg-blue-900 border border-blue-900 text-blue-300
-                           rounded-md px-3 py-2 text-sm font-semibold disabled:opacity-50 transition-colors"
+                className="bg-blue-600 hover:bg-blue-500 border border-blue-500 text-white
+                           rounded-lg px-3 py-2 text-xs font-bold disabled:opacity-50 transition-all shadow-md shadow-blue-600/20"
               >
                 ↻
               </button>
@@ -407,29 +403,29 @@ export default function SimControls() {
       ) : (
         <>
           {/* Running summary */}
-          <div className="bg-[#1f2937] rounded-md px-3 py-2 flex items-center gap-2">
+          <div className="bg-slate-100/90 dark:bg-[#1f2937] border border-slate-200 dark:border-gray-700/60 rounded-lg px-3 py-2 flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-              status === "running" ? "bg-green-500" : "bg-yellow-500"
+              status === "running" ? "bg-emerald-500 shadow-[0_0_6px_#10b981]" : "bg-amber-500"
             }`} />
-            <span className="text-xs text-gray-400">
+            <span className="text-xs font-medium text-slate-700 dark:text-gray-300">
               {policyLabel} · {profileLabel}
             </span>
           </div>
 
-          <div className="flex gap-1.5">
+          <div className="flex gap-2">
             {status === "running" ? (
               <button
                 onClick={pauseSimulation}
-                className="flex-1 bg-[#1f2937] hover:bg-yellow-900 border border-gray-700
-                           text-yellow-300 rounded-md py-2 text-xs font-semibold transition-colors"
+                className="flex-1 bg-amber-600 hover:bg-amber-500 border border-amber-500
+                           text-white rounded-lg py-2 text-xs font-bold transition-all shadow-md shadow-amber-600/20"
               >
                 ⏸ Pause
               </button>
             ) : (
               <button
                 onClick={resumeSimulation}
-                className="flex-1 bg-[#1f2937] hover:bg-blue-900 border border-gray-700
-                           text-blue-300 rounded-md py-2 text-xs font-semibold transition-colors"
+                className="flex-1 bg-blue-600 hover:bg-blue-500 border border-blue-500
+                           text-white rounded-lg py-2 text-xs font-bold transition-all shadow-md shadow-blue-600/20"
               >
                 ▶ Resume
               </button>
@@ -437,9 +433,9 @@ export default function SimControls() {
             <button
               onClick={stopSimulation}
               disabled={loading}
-              className="flex-1 bg-[#450a0a] hover:bg-red-900 border border-red-900
-                         text-red-300 rounded-md py-2 text-xs font-semibold
-                         disabled:opacity-50 transition-colors"
+              className="flex-1 bg-rose-600 hover:bg-rose-500 border border-rose-500
+                         text-white rounded-lg py-2 text-xs font-bold
+                         disabled:opacity-50 transition-all shadow-md shadow-rose-600/20"
             >
               ■ Stop
             </button>

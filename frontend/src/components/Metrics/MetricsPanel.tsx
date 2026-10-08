@@ -20,10 +20,10 @@ interface MetricCardProps {
 }
 
 const colorMap = {
-  white: "text-gray-100",
-  green: "text-green-400",
-  amber: "text-amber-400",
-  blue:  "text-blue-400",
+  white: "text-slate-900 dark:text-gray-100",
+  green: "text-emerald-600 dark:text-green-400",
+  amber: "text-amber-600 dark:text-amber-400",
+  blue:  "text-blue-600 dark:text-blue-400",
 };
 
 // Trend = mean of last 10 ticks vs mean of the 11..30-tick window. Returns
@@ -100,21 +100,21 @@ function MetricCard({
   // Per-color sparkline tone — matches the value color so the eye groups
   // them visually.
   const sparkColor =
-    color === "green" ? "#34d399" :
-    color === "amber" ? "#fbbf24" :
-    color === "blue"  ? "#60a5fa" :
-                        "#9ca3af";
+    color === "green" ? "#10b981" :
+    color === "amber" ? "#f59e0b" :
+    color === "blue"  ? "#3b82f6" :
+                        "#94a3b8";
 
   return (
     <div
-      className={`bg-[#111827] border border-gray-800 rounded-lg p-2.5 ${
+      className={`bg-slate-50 dark:bg-[#0c121d] border border-slate-200/90 dark:border-gray-800/90 rounded-xl p-3 transition-colors ${
         span2 ? "col-span-2" : ""
       }`}
     >
-      <div className="text-[9px] text-gray-500 uppercase tracking-wider">{label}</div>
-      <div className={`text-xl font-bold mt-1 leading-none ${colorMap[color]} flex items-baseline`}>
+      <div className="text-[10px] text-slate-500 dark:text-gray-400 uppercase tracking-wider font-bold">{label}</div>
+      <div className={`text-xl font-extrabold mt-1 leading-none ${colorMap[color]} flex items-baseline font-mono`}>
         <span>{value}</span>
-        {unit && <span className="text-[10px] text-gray-500 font-normal ml-1">{unit}</span>}
+        {unit && <span className="text-[10px] text-slate-500 dark:text-gray-400 font-normal ml-1">{unit}</span>}
         {historyKey && (
           <TrendArrow
             history={history}
@@ -140,7 +140,7 @@ export default function MetricsPanel() {
 
   return (
     <div>
-      <div className="text-[9px] text-gray-600 uppercase tracking-widest mb-2">Live Metrics</div>
+      <div className="text-[10px] text-slate-500 dark:text-gray-400 uppercase tracking-wider font-bold mb-2">Live Telemetry</div>
       <div className="grid grid-cols-2 gap-1.5">
         <MetricCard label="Sim Time" value={idle ? "—" : Math.round(simTime)} unit={idle ? undefined : "s"} />
         <MetricCard label="Tick"     value={fmtI(tick)} />

@@ -39,6 +39,8 @@ function phaseColor(sub: "G" | "y" | "r") {
 export default function IntersectionNode({ intersection, cx, cy }: Props) {
   const selectedId        = useTrafficStore((s) => s.selectedIntersection);
   const selectIntersection = useTrafficStore((s) => s.selectIntersection);
+  const themeMode         = useTrafficStore((s) => s.themeMode);
+  const isDay             = themeMode === "day";
   const isSelected        = selectedId === intersection.id;
   const [hover, setHover] = useState(false);
 
@@ -59,28 +61,28 @@ export default function IntersectionNode({ intersection, cx, cy }: Props) {
       onClick={handleClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      style={{ cursor: "pointer" }}
+      style={{ cursor: "pointer", filter: isDay ? "drop-shadow(0 2px 5px rgba(0,0,0,0.22))" : "drop-shadow(0 0 8px rgba(0,0,0,0.6))" }}
     >
       {/* Glow ring */}
-      <circle r={r + 8} fill={glow} fillOpacity={isSelected ? 0.18 : 0.12} />
+      <circle r={r + 8} fill={glow} fillOpacity={isSelected ? 0.28 : isDay ? 0.18 : 0.14} />
       {/* Selected pulse ring */}
       {isSelected && (
-        <circle r={r + 14} fill="none" stroke="#93c5fd" strokeWidth={1.5} strokeOpacity={0.5} />
+        <circle r={r + 14} fill="none" stroke={isDay ? "#2563eb" : "#93c5fd"} strokeWidth={1.8} strokeOpacity={0.65} />
       )}
       {/* Main circle */}
       <circle
         r={r}
         fill={fill}
-        fillOpacity={0.92}
-        stroke={isSelected ? "#93c5fd" : "none"}
-        strokeWidth={isSelected ? 2 : 0}
+        fillOpacity={0.96}
+        stroke={isSelected ? "#1d4ed8" : isDay ? "#ffffff" : "rgba(255,255,255,0.4)"}
+        strokeWidth={isSelected ? 3 : isDay ? 2.5 : 1}
       />
       {/* ID */}
       <text
         y={-2}
         textAnchor="middle"
         fill="white"
-        fontSize={9}
+        fontSize={9.5}
         fontFamily="monospace"
         fontWeight="bold"
         style={{ pointerEvents: "none", userSelect: "none" }}
@@ -91,9 +93,10 @@ export default function IntersectionNode({ intersection, cx, cy }: Props) {
       <text
         y={9}
         textAnchor="middle"
-        fill="rgba(255,255,255,0.75)"
-        fontSize={7}
+        fill="rgba(255,255,255,0.92)"
+        fontSize={7.5}
         fontFamily="monospace"
+        fontWeight="600"
         style={{ pointerEvents: "none", userSelect: "none" }}
       >
         {dir}·{remaining}s

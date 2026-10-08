@@ -67,18 +67,18 @@ export default function SystemSummary() {
   const variantText = activeVariant || "defaults";
 
   return (
-    <div className="bg-[#0d1421] border border-gray-800 rounded-md p-2.5 font-mono text-[11px] leading-tight">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[9px] uppercase tracking-widest text-gray-500">
-          {running ? "Running" : "Configured"}
+    <div className="bg-slate-50 dark:bg-[#0c121d] border border-slate-200 dark:border-gray-800/90 rounded-xl p-3 font-mono text-[11px] leading-tight transition-colors">
+      <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-200 dark:border-gray-800/80">
+        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-700 dark:text-gray-300">
+          {running ? "● Active Runtime Engine" : "○ Configured Setup"}
         </span>
         <span
-          className={`w-1.5 h-1.5 rounded-full ${
+          className={`w-2.5 h-2.5 rounded-full ${
             status === "running"
-              ? "bg-green-500 shadow-[0_0_6px_#22c55e]"
+              ? "bg-emerald-500 shadow-[0_0_8px_#10b981]"
               : status === "paused"
-              ? "bg-yellow-500"
-              : "bg-gray-700"
+              ? "bg-amber-500 shadow-[0_0_6px_#f59e0b]"
+              : "bg-slate-300 dark:bg-gray-700"
           }`}
         />
       </div>
@@ -98,9 +98,9 @@ export default function SystemSummary() {
 
 function Row({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex">
-      <span className="w-[58px] text-gray-600">{k}</span>
-      <span className="text-gray-300 truncate">{v}</span>
+    <div className="flex items-center py-1">
+      <span className="w-16 text-slate-500 dark:text-gray-400 text-[10px] font-sans font-semibold uppercase tracking-wider">{k}</span>
+      <span className="text-slate-900 dark:text-gray-100 font-mono font-bold text-xs truncate flex-1">{v}</span>
     </div>
   );
 }

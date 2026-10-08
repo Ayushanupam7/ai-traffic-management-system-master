@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTrafficStore } from "@/store/trafficStore";
 import { api } from "@/lib/api";
+import { Activity, Clock, Timer, Gauge, Calendar } from "lucide-react";
 import type { PolicyVariant, VariantRun } from "@/lib/types";
 
 interface Props {
@@ -16,6 +18,9 @@ function median(xs: number[]): number | null {
 }
 
 export default function VariantPerformance({ variant }: Props) {
+  const themeMode = useTrafficStore((s) => s.themeMode);
+  const isDay = themeMode === "day";
+
   const [runs, setRuns] = useState<VariantRun[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +50,10 @@ export default function VariantPerformance({ variant }: Props) {
 
   if (!variant) {
     return (
-      <div className="text-xs text-gray-500">
-        Select a saved variant from the left to see its historical performance.
+      <div className={`p-8 text-center rounded-2xl border text-xs ${
+        isDay ? "bg-white border-slate-200 text-slate-500 shadow-xs" : "bg-gray-900/40 border-gray-800 text-gray-500"
+      }`}>
+        Select a saved variant from the left rail to view historical empirical performance metrics.
       </div>
     );
   }
@@ -58,71 +65,91 @@ export default function VariantPerformance({ variant }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="text-xs text-gray-500">Performance · </div>
-        <div className="text-xl font-mono text-gray-200">{variant.name}</div>
+      <div className={`p-5 rounded-2xl border ${
+        isDay ? "bg-white border-slate-200/90 shadow-sm" : "bg-[#0c1017]/90 border-gray-800 shadow-lg"
+      }`}>
+        <div className={`text-xs font-bold uppercase tracking-wider ${isDay ? "text-slate-500" : "text-gray-400"}`}>
+          Empirical Benchmark Record
+        </div>
+        <div className={`text-xl font-mono font-bold mt-1 ${isDay ? "text-slate-900" : "text-white"}`}>
+          {variant.name}
+        </div>
       </div>
 
-      {loading && <p className="text-xs text-gray-500">Loading…</p>}
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {loading && <p className={`text-xs ${isDay ? "text-slate-500" : "text-gray-500"}`}>Loading run metrics…</p>}
+      {error && <p className="text-xs text-rose-500">{error}</p>}
 
       {!loading && runs.length === 0 && (
-        <p className="text-xs text-gray-500">
-          No completed runs used these parameters yet. Run a sim or comparison with
-          this variant active and check back.
-        </p>
+        <div className={`p-8 text-center rounded-2xl border text-xs ${
+          isDay ? "bg-white border-slate-200 text-slate-500 shadow-xs" : "bg-gray-900/40 border-gray-800 text-gray-500"
+        }`}>
+          No completed simulation runs recorded for this variant yet. Run a simulation or comparison experiment using this variant to populate benchmarks.
+        </div>
       )}
 
       {runs.length > 0 && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Kpi label="Runs" value={String(runs.length)} unit="" />
-            <Kpi label="Med. clearance" value={fmt(median(clearance))} unit="s" />
-            <Kpi label="Med. trip time" value={fmt(median(tripTime))} unit="s" />
-            <Kpi label="Med. control delay" value={fmt(median(controlDelay))} unit="s" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+            <Kpi label="Total Runs" value={String(runs.length)} unit="" icon={Activity} isDay={isDay} />
+            <Kpi label="Median Clearance" value={fmt(median(clearance))} unit="s" icon={Timer} isDay={isDay} />
+            <Kpi label="Median Trip Time" value={fmt(median(tripTime))} unit="s" icon={Clock} isDay={isDay} />
+            <Kpi label="Median Delay" value={fmt(median(controlDelay))} unit="s" icon={Gauge} isDay={isDay} />
           </div>
 
-          <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-3">
-            <div className="text-xs font-semibold text-gray-300 mb-2">
-              Recent runs
+          <div className={`p-5 rounded-2xl border overflow-hidden ${
+            isDay ? "bg-white border-slate-200/90 shadow-sm" : "bg-[#0c1017]/90 border-gray-800 shadow-lg"
+          }`}>
+            <div className={`text-xs font-bold uppercase tracking-wider mb-3 ${
+              isDay ? "text-slate-700" : "text-gray-300"
+            }`}>
+              Recent Execution Runs
             </div>
-            <table className="w-full text-[11px]">
-              <thead>
-                <tr className="text-gray-500 uppercase tracking-wider">
-                  <th className="text-left pb-1 font-normal">When</th>
-                  <th className="text-left pb-1 font-normal">Profile</th>
-                  <th className="text-right pb-1 font-normal">Cars</th>
-                  <th className="text-right pb-1 font-normal">Clearance</th>
-                  <th className="text-right pb-1 font-normal">Trip time</th>
-                  <th className="text-right pb-1 font-normal">Ctrl delay</th>
-                </tr>
-              </thead>
-              <tbody>
-                {runs.slice(0, 10).map((r) => (
-                  <tr key={r.run_id} className="border-t border-gray-800">
-                    <td className="py-1 text-gray-400">
-                      {r.started_at?.slice(0, 16).replace("T", " ") ?? "—"}
-                    </td>
-                    <td className="py-1 text-gray-400">{r.demand_profile ?? "—"}</td>
-                    <td className="py-1 text-right font-mono text-gray-300">
-                      {r.total_vehicles ?? "—"}
-                    </td>
-                    <td className="py-1 text-right font-mono text-gray-300">
-                      {fmt(r.clearance_s)}s
-                    </td>
-                    <td className="py-1 text-right font-mono text-gray-300">
-                      {fmt(r.avg_trip_time_s)}s
-                    </td>
-                    <td className="py-1 text-right font-mono text-gray-300">
-                      {fmt(r.avg_control_delay_s)}s
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className={`border-b text-[10px] uppercase tracking-wider ${
+                    isDay ? "border-slate-200 text-slate-500" : "border-gray-800 text-gray-400"
+                  }`}>
+                    <th className="text-left pb-2 font-bold">Executed</th>
+                    <th className="text-left pb-2 font-bold">Profile</th>
+                    <th className="text-right pb-2 font-bold">Vehicles</th>
+                    <th className="text-right pb-2 font-bold">Clearance</th>
+                    <th className="text-right pb-2 font-bold">Trip Time</th>
+                    <th className="text-right pb-2 font-bold">Ctrl Delay</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="text-[10px] text-gray-600 mt-2">
-              Throughput median: {fmt(median(throughput))} veh/min ·
-              Showing 10 of {runs.length}.
+                </thead>
+                <tbody>
+                  {runs.slice(0, 10).map((r) => (
+                    <tr key={r.run_id} className={`border-t transition-colors ${
+                      isDay ? "border-slate-100 hover:bg-slate-50/80" : "border-gray-800/80 hover:bg-gray-850"
+                    }`}>
+                      <td className={`py-2 font-mono text-[11px] ${isDay ? "text-slate-600" : "text-gray-400"}`}>
+                        {r.started_at?.slice(0, 16).replace("T", " ") ?? "—"}
+                      </td>
+                      <td className={`py-2 font-medium ${isDay ? "text-slate-700" : "text-gray-300"}`}>
+                        {r.demand_profile ?? "—"}
+                      </td>
+                      <td className={`py-2 text-right font-mono font-bold ${isDay ? "text-slate-900" : "text-gray-100"}`}>
+                        {r.total_vehicles ?? "—"}
+                      </td>
+                      <td className={`py-2 text-right font-mono ${isDay ? "text-slate-700" : "text-gray-300"}`}>
+                        {fmt(r.clearance_s)}s
+                      </td>
+                      <td className={`py-2 text-right font-mono ${isDay ? "text-slate-700" : "text-gray-300"}`}>
+                        {fmt(r.avg_trip_time_s)}s
+                      </td>
+                      <td className={`py-2 text-right font-mono ${isDay ? "text-slate-700" : "text-gray-300"}`}>
+                        {fmt(r.avg_control_delay_s)}s
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className={`text-[10.5px] mt-3 pt-2 border-t ${
+              isDay ? "border-slate-100 text-slate-500" : "border-gray-800 text-gray-400"
+            }`}>
+              Overall Throughput Median: <strong>{fmt(median(throughput))} veh/min</strong> · Displaying 10 of {runs.length} runs
             </p>
           </div>
         </>
@@ -131,13 +158,22 @@ export default function VariantPerformance({ variant }: Props) {
   );
 }
 
-function Kpi({ label, value, unit }: { label: string; value: string; unit: string }) {
+function Kpi({
+  label, value, unit, icon: Icon, isDay,
+}: { label: string; value: string; unit: string; icon: typeof Activity; isDay: boolean }) {
   return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-3">
-      <div className="text-[10px] uppercase tracking-wider text-gray-500">{label}</div>
-      <div className="text-xl font-mono text-gray-200 mt-1">
+    <div className={`p-4 rounded-2xl border transition-all ${
+      isDay ? "bg-white border-slate-200/90 shadow-xs" : "bg-[#0c1017]/90 border-gray-800 shadow-md"
+    }`}>
+      <div className="flex items-center justify-between">
+        <span className={`text-[10px] uppercase font-bold tracking-wider ${
+          isDay ? "text-slate-500" : "text-gray-400"
+        }`}>{label}</span>
+        <Icon className={`w-3.5 h-3.5 ${isDay ? "text-blue-600" : "text-blue-400"}`} />
+      </div>
+      <div className={`text-xl font-mono font-black mt-1.5 ${isDay ? "text-slate-900" : "text-white"}`}>
         {value}
-        {unit && <span className="text-xs text-gray-500 ml-1">{unit}</span>}
+        {unit && <span className={`text-xs ml-1 font-normal ${isDay ? "text-slate-500" : "text-gray-400"}`}>{unit}</span>}
       </div>
     </div>
   );

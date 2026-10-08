@@ -141,24 +141,53 @@ function makePlaceholder(id: string): IntersectionState {
   };
 }
 
-function VehicleDots({ vehicles }: { vehicles: VehicleState[] }) {
+function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boolean }) {
   if (vehicles.length > 1500) return null;
   return (
-    <>
+    <g id="vehicle-layer">
       {vehicles.map((v) => {
         const { x, y } = vehicleToSvg(v);
+        const isEv = String(v.type) === "emergency" || v.id.toLowerCase().includes("emergency");
+        if (isEv) {
+          return (
+            <g key={v.id}>
+              {/* Emergency Beacon Glow */}
+              <circle cx={x} cy={y} r={8} fill="#ef4444" fillOpacity={0.25} />
+              <circle
+                cx={x}
+                cy={y}
+                r={6}
+                fill="none"
+                stroke="#ef4444"
+                strokeWidth={1.5}
+                strokeDasharray="4 2"
+              />
+              <circle
+                cx={x}
+                cy={y}
+                r={4}
+                fill="#dc2626"
+                stroke="#ffffff"
+                strokeWidth={1.2}
+              />
+              <circle cx={x} cy={y} r={1.5} fill="#ffffff" />
+            </g>
+          );
+        }
         return (
           <circle
             key={v.id}
             cx={x}
             cy={y}
-            r={2.5}
-            fill={String(v.type) === "emergency" ? "#ef4444" : "#3b82f6"}
-            fillOpacity={0.78}
+            r={3.2}
+            fill="#3b82f6"
+            stroke={isDay ? "#ffffff" : "#0f172a"}
+            strokeWidth={0.8}
+            fillOpacity={0.95}
           />
         );
       })}
-    </>
+    </g>
   );
 }
 
@@ -167,122 +196,231 @@ interface Props {
 }
 
 export default function SumoGrid({ showHeat = true }: Props) {
-  const intersections   = useTrafficStore((s) => s.intersections);
-  const vehicles        = useTrafficStore((s) => s.vehicles);
-  const activeEvRoutes  = useTrafficStore((s) => s.activeEvRoutes);
+  const intersections  = useTrafficStore((s) => s.intersections);
+  const vehicles       = useTrafficStore((s) => s.vehicles);
+  const activeEvRoutes = useTrafficStore((s) => s.activeEvRoutes);
+  const themeMode      = useTrafficStore((s) => s.themeMode);
+  const isDay          = themeMode === "day";
+
+  // Cartographic Theme Palette
+  const blockFill       = isDay ? "#f8fafc" : "#0b1220";
+  const blockStroke     = isDay ? "#e2e8f0" : "#16233b";
+  const bldgFill        = isDay ? "#ffffff" : "#0f1a2e";
+  const bldgStroke      = isDay ? "#cbd5e1" : "#1e2e4a";
+  const parkFill        = isDay ? "#e6f8ee" : "#06231c";
+  const parkStroke      = isDay ? "#bbf7d0" : "#0c4538";
+  const treeFill        = isDay ? "#86efac" : "#105a45";
+  const sidewalkFill    = isDay ? "#e2e8f0" : "#131f33";
+  const curbStroke      = isDay ? "#cbd5e1" : "#1e2f4a";
+  const roadFill        = isDay ? "#1e293b" : "#0c1524";
+  const dashStroke      = isDay ? "#ffffff" : "#38bdf8";
+  const medStroke       = isDay ? "#f59e0b" : "#fbbf24";
+  const crosswalkStroke = isDay ? "rgba(255,255,255,0.88)" : "rgba(148,163,184,0.55)";
+  const stopBarStroke   = isDay ? "rgba(255,255,255,0.95)" : "rgba(56,189,248,0.75)";
 
   const byId = new Map(intersections.map((i) => [i.id, i]));
   SUMO_IDS.forEach((id) => { if (!byId.has(id)) byId.set(id, makePlaceholder(id)); });
 
-  // Column centres for cross streets (50 px wide).
-  // Block x ranges between cross streets:
-  //   left of A:   x = 0 … 225
-  //   between A&B: x = 275 … 725
-  //   between B&C: x = 775 … 1225
-  //   right of C:  x = 1275 … 1500
+  // Cross street centres: 250, 750, 1250 (50 px road + 8 px sidewalks = 58 px total)
   return (
     <>
-      {/* City blocks — top row (y=0..230) and bottom row (y=495..600) */}
-      <rect x={0}    y={0}   width={225} height={230} fill="#0d1421" />
-      <rect x={275}  y={0}   width={450} height={230} fill="#0d1421" />
-      <rect x={775}  y={0}   width={450} height={230} fill="#0d1421" />
-      <rect x={1275} y={0}   width={225} height={230} fill="#0d1421" />
-      <rect x={0}    y={495} width={225} height={105} fill="#0d1421" />
-      <rect x={275}  y={495} width={450} height={105} fill="#0d1421" />
-      <rect x={775}  y={495} width={450} height={105} fill="#0d1421" />
-      <rect x={1275} y={495} width={225} height={105} fill="#0d1421" />
-      {/* City blocks — between arterials (y=310..415) */}
-      <rect x={0}    y={310} width={225} height={105} fill="#0d1421" />
-      <rect x={275}  y={310} width={450} height={105} fill="#0d1421" />
-      <rect x={775}  y={310} width={450} height={105} fill="#0d1421" />
-      <rect x={1275} y={310} width={225} height={105} fill="#0d1421" />
+      <defs>
+        <filter id="bldg-shadow" x="-5%" y="-5%" width="110%" height="110%">
+          <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" floodColor="#000000" floodOpacity={isDay ? "0.07" : "0.35"} />
+        </filter>
+      </defs>
 
-      {/* Building footprints (decorative). Scattered across the four top
-          city blocks and the bottom row. */}
+      {/* ── 1. City Blocks with Paved Borders ── */}
+      {/* Top row (y=4..220) */}
+      <rect x={4}    y={4}   width={213} height={218} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+      <rect x={283}  y={4}   width={434} height={218} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+      <rect x={783}  y={4}   width={434} height={218} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+      <rect x={1283} y={4}   width={213} height={218} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+
+      {/* Middle row — between arterials (y=316..404) */}
+      <rect x={4}    y={316} width={213} height={89} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+      <rect x={283}  y={316} width={434} height={89} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+      <rect x={783}  y={316} width={434} height={89} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+      <rect x={1283} y={316} width={213} height={89} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+
+      {/* Bottom row (y=501..596) */}
+      <rect x={4}    y={501} width={213} height={95} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+      <rect x={283}  y={501} width={434} height={95} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+      <rect x={783}  y={501} width={434} height={95} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+      <rect x={1283} y={501} width={213} height={95} rx={8} fill={blockFill} stroke={blockStroke} strokeWidth={1.5} />
+
+      {/* ── 2. Landscaped Urban Green Parks & Gardens ── */}
+      {/* Central North Park */}
+      <g id="urban-park-north">
+        <rect x={300} y={20} width={180} height={85} rx={6} fill={parkFill} stroke={parkStroke} strokeWidth={1.2} />
+        {/* Decorative Park Paths */}
+        <line x1={300} y1={62} x2={480} y2={62} stroke={parkStroke} strokeWidth={1} strokeDasharray="4 3" />
+        <line x1={390} y1={20} x2={390} y2={105} stroke={parkStroke} strokeWidth={1} strokeDasharray="4 3" />
+        <circle cx={390} cy={62} r={8} fill={parkStroke} fillOpacity={0.6} />
+        <circle cx={390} cy={62} r={4} fill={isDay ? "#60a5fa" : "#3b82f6"} />
+        {/* Tree Canopies */}
+        {[
+          [320, 38], [340, 42], [360, 36], [420, 38], [445, 42], [465, 36],
+          [320, 85], [345, 88], [365, 82], [420, 86], [445, 82], [465, 86],
+        ].map(([tx, ty], i) => (
+          <circle key={i} cx={tx} cy={ty} r={5.5} fill={treeFill} />
+        ))}
+      </g>
+
+      {/* Central South Plaza & Gardens */}
+      <g id="urban-park-south">
+        <rect x={800} y={514} width={190} height={70} rx={6} fill={parkFill} stroke={parkStroke} strokeWidth={1.2} />
+        <line x1={800} y1={549} x2={990} y2={549} stroke={parkStroke} strokeWidth={1} strokeDasharray="4 3" />
+        {[
+          [825, 532], [855, 532], [935, 532], [965, 532],
+          [825, 566], [855, 566], [935, 566], [965, 566],
+        ].map(([tx, ty], i) => (
+          <circle key={i} cx={tx} cy={ty} r={5} fill={treeFill} />
+        ))}
+      </g>
+
+      {/* ── 3. Architectural Building Footprints ── */}
       {[
         // Top-left block (0..225)
-        [25,20,70,40],[110,30,55,28],[20,75,80,30],[105,80,70,32],[25,125,80,40],[120,125,55,30],[25,175,90,40],
-        // Top-mid-left block (275..725)
-        [290,20,90,35],[395,25,75,30],[490,30,65,35],[580,20,80,40],[660,25,55,30],
-        [290,75,75,40],[380,80,90,32],[485,85,75,40],[580,75,85,35],[675,80,40,30],
-        [290,135,85,45],[390,140,75,35],[480,135,90,40],[585,140,75,35],[680,140,35,40],
+        [25,20,70,40],[110,30,55,28],[20,75,80,30],[105,80,70,32],[25,125,80,40],[120,125,55,30],[25,175,90,35],
+        // Top-mid-left block (remaining buildings around park)
+        [500,20,90,38],[605,25,95,35],
+        [495,75,85,38],[595,75,105,38],
+        [295,135,90,45],[395,140,85,40],[490,135,95,42],[595,140,105,40],
         // Top-mid-right block (775..1225)
-        [790,20,75,40],[880,25,65,30],[955,30,90,32],[1060,20,75,38],[1145,25,70,32],
-        [790,80,70,35],[875,80,90,30],[975,85,70,32],[1060,80,80,40],[1150,85,60,30],
-        [790,140,90,42],[890,135,75,38],[975,140,85,35],[1070,140,70,36],[1150,140,65,40],
+        [795,20,80,40],[885,25,75,32],[970,30,95,32],[1075,20,80,38],[1165,25,45,32],
+        [795,80,75,35],[880,80,95,30],[985,85,75,32],[1070,80,85,40],[1165,85,45,30],
+        [795,140,95,42],[900,135,80,38],[990,140,90,35],[1090,140,75,36],[1175,140,35,40],
         // Top-right block (1275..1500)
-        [1290,20,75,40],[1375,25,65,30],[1450,30,40,32],[1290,75,80,32],[1380,80,60,35],
-        [1290,130,90,40],[1390,135,70,35],
+        [1295,20,75,40],[1380,25,65,30],[1455,30,35,32],[1295,75,80,32],[1385,80,60,35],
+        [1295,130,90,40],[1395,135,70,35],
+        // Mid-left block (between arterials)
+        [25,326,80,32],[115,326,75,32],[25,368,90,30],[125,368,65,30],
+        // Mid-central block
+        [295,326,95,32],[400,326,90,32],[500,326,95,32],[605,326,95,32],
+        [295,368,90,30],[395,368,95,30],[500,368,90,30],[600,368,100,30],
+        // Mid-east block
+        [795,326,95,32],[900,326,90,32],[1000,326,95,32],[1105,326,95,32],
+        [795,368,90,30],[895,368,95,30],[1000,368,90,30],[1100,368,100,30],
+        // Mid-right block
+        [1295,326,85,32],[1390,326,80,32],[1295,368,95,30],[1400,368,70,30],
+        // Bottom blocks
+        [25,515,80,35],[115,515,70,35],[25,560,90,30],[125,560,60,30],
+        [295,515,95,35],[400,515,90,35],[500,515,95,35],[605,515,95,35],
+        [295,560,90,30],[395,560,95,30],[500,560,90,30],[600,560,100,30],
+        [1000,515,95,35],[1105,515,95,35],[1000,560,90,30],[1100,560,100,30],
+        [1295,515,85,35],[1390,515,80,35],[1295,560,95,30],[1400,560,70,30],
       ].map(([x, y, w, h], i) => (
-        <rect key={i} x={x} y={y} width={w} height={h} fill="#0f1a2e" rx={2} />
+        <rect
+          key={i}
+          x={x}
+          y={y}
+          width={w}
+          height={h}
+          fill={bldgFill}
+          stroke={bldgStroke}
+          strokeWidth={1}
+          rx={4}
+          filter="url(#bldg-shadow)"
+        />
       ))}
 
-      {/* Roads — horizontal arterials (3 lanes per direction). 80 px tall. */}
-      <rect x={0} y={230} width={1500} height={80} fill="#111d2e" />
-      <rect x={0} y={415} width={1500} height={80} fill="#111d2e" />
+      {/* ── 4. Architectural Sidewalks / Curbs Layer ── */}
+      {/* Horizontal arterial sidewalks (88 px tall, extending 4px north and south) */}
+      <rect x={0} y={226} width={1500} height={88} fill={sidewalkFill} stroke={curbStroke} strokeWidth={1} />
+      <rect x={0} y={411} width={1500} height={88} fill={sidewalkFill} stroke={curbStroke} strokeWidth={1} />
 
-      {/* Roads — vertical cross streets (2 lanes per direction). 50 px wide. */}
-      <rect x={225}  y={0} width={50} height={600} fill="#111d2e" />
-      <rect x={725}  y={0} width={50} height={600} fill="#111d2e" />
-      <rect x={1225} y={0} width={50} height={600} fill="#111d2e" />
+      {/* Vertical cross-street sidewalks (58 px wide, extending 4px west and east) */}
+      <rect x={221}  y={0} width={58} height={600} fill={sidewalkFill} stroke={curbStroke} strokeWidth={1} />
+      <rect x={721}  y={0} width={58} height={600} fill={sidewalkFill} stroke={curbStroke} strokeWidth={1} />
+      <rect x={1221} y={0} width={58} height={600} fill={sidewalkFill} stroke={curbStroke} strokeWidth={1} />
 
-      {/* Heatmap layer — overlaid on roads, under lane dashes */}
+      {/* ── 5. Road Asphalt Layer ── */}
+      {/* Horizontal arterials (80 px tall) */}
+      <rect x={0} y={230} width={1500} height={80} fill={roadFill} />
+      <rect x={0} y={415} width={1500} height={80} fill={roadFill} />
+
+      {/* Vertical cross streets (50 px wide) */}
+      <rect x={225}  y={0} width={50} height={600} fill={roadFill} />
+      <rect x={725}  y={0} width={50} height={600} fill={roadFill} />
+      <rect x={1225} y={0} width={50} height={600} fill={roadFill} />
+
+      {/* ── 6. Heatmap Layer (overlaid on road asphalt) ── */}
       {showHeat && <HeatLayer />}
 
-      {/* Horizontal arterial lane markings — top arterial center y=270.
-          Dashed at y=247, 258 (W-bound); double-stripe median at y=270;
-          dashed at y=282, 293 (E-bound). Skip the 50 px-wide intersection
-          windows centred on x = 250, 750, 1250. */}
+      {/* ── 7. Pedestrian Crosswalks (Zebra Stripes) & Stop Bars ── */}
+      {[
+        { cx: 250, cy: 270 }, { cx: 750, cy: 270 }, { cx: 1250, cy: 270 },
+        { cx: 250, cy: 455 }, { cx: 750, cy: 455 }, { cx: 1250, cy: 455 },
+      ].map(({ cx, cy }, i) => (
+        <g key={`crosswalk-${i}`}>
+          {/* West & East Crosswalks across the 80px arterial */}
+          <line x1={cx - 31} y1={cy - 38} x2={cx - 31} y2={cy + 38} stroke={crosswalkStroke} strokeWidth={3.5} strokeDasharray="4 3" />
+          <line x1={cx + 31} y1={cy - 38} x2={cx + 31} y2={cy + 38} stroke={crosswalkStroke} strokeWidth={3.5} strokeDasharray="4 3" />
+          {/* North & South Crosswalks across the 50px cross street */}
+          <line x1={cx - 23} y1={cy - 44} x2={cx + 23} y2={cy - 44} stroke={crosswalkStroke} strokeWidth={3.5} strokeDasharray="4 3" />
+          <line x1={cx - 23} y1={cy + 44} x2={cx + 23} y2={cy + 44} stroke={crosswalkStroke} strokeWidth={3.5} strokeDasharray="4 3" />
+
+          {/* Stop Bars (Solid white lines before crosswalks) */}
+          <line x1={cx - 37} y1={cy - 38} x2={cx - 37} y2={cy + 38} stroke={stopBarStroke} strokeWidth={1.8} />
+          <line x1={cx + 37} y1={cy - 38} x2={cx + 37} y2={cy + 38} stroke={stopBarStroke} strokeWidth={1.8} />
+          <line x1={cx - 23} y1={cy - 49} x2={cx + 23} y2={cy - 49} stroke={stopBarStroke} strokeWidth={1.8} />
+          <line x1={cx - 23} y1={cy + 49} x2={cx + 23} y2={cy + 49} stroke={stopBarStroke} strokeWidth={1.8} />
+        </g>
+      ))}
+
+      {/* ── 8. Arterial Lane Markings ── */}
+      {/* Upper arterial — centre y=270 */}
       {[247, 258, 282, 293].map((y) => (
         <g key={`tdash-${y}`}>
-          <line x1={0}    y1={y} x2={225}  y2={y} stroke="#1e3048" strokeWidth={1.2} strokeDasharray="18 12" />
-          <line x1={275}  y1={y} x2={725}  y2={y} stroke="#1e3048" strokeWidth={1.2} strokeDasharray="18 12" />
-          <line x1={775}  y1={y} x2={1225} y2={y} stroke="#1e3048" strokeWidth={1.2} strokeDasharray="18 12" />
-          <line x1={1275} y1={y} x2={1500} y2={y} stroke="#1e3048" strokeWidth={1.2} strokeDasharray="18 12" />
+          <line x1={0}    y1={y} x2={218}  y2={y} stroke={dashStroke} strokeWidth={1.4} strokeDasharray="16 12" />
+          <line x1={282}  y1={y} x2={718}  y2={y} stroke={dashStroke} strokeWidth={1.4} strokeDasharray="16 12" />
+          <line x1={782}  y1={y} x2={1218} y2={y} stroke={dashStroke} strokeWidth={1.4} strokeDasharray="16 12" />
+          <line x1={1282} y1={y} x2={1500} y2={y} stroke={dashStroke} strokeWidth={1.4} strokeDasharray="16 12" />
         </g>
       ))}
       {[268.5, 271.5].map((y) => (
         <g key={`tmed-${y}`}>
-          <line x1={0}    y1={y} x2={225}  y2={y} stroke="#3a5a82" strokeWidth={1.0} />
-          <line x1={275}  y1={y} x2={725}  y2={y} stroke="#3a5a82" strokeWidth={1.0} />
-          <line x1={775}  y1={y} x2={1225} y2={y} stroke="#3a5a82" strokeWidth={1.0} />
-          <line x1={1275} y1={y} x2={1500} y2={y} stroke="#3a5a82" strokeWidth={1.0} />
+          <line x1={0}    y1={y} x2={218}  y2={y} stroke={medStroke} strokeWidth={1.2} />
+          <line x1={282}  y1={y} x2={718}  y2={y} stroke={medStroke} strokeWidth={1.2} />
+          <line x1={782}  y1={y} x2={1218} y2={y} stroke={medStroke} strokeWidth={1.2} />
+          <line x1={1282} y1={y} x2={1500} y2={y} stroke={medStroke} strokeWidth={1.2} />
         </g>
       ))}
-      {/* Bottom arterial — center y=455. */}
+
+      {/* Lower arterial — centre y=455 */}
       {[432, 443, 467, 478].map((y) => (
         <g key={`bdash-${y}`}>
-          <line x1={0}    y1={y} x2={225}  y2={y} stroke="#1e3048" strokeWidth={1.2} strokeDasharray="18 12" />
-          <line x1={275}  y1={y} x2={725}  y2={y} stroke="#1e3048" strokeWidth={1.2} strokeDasharray="18 12" />
-          <line x1={775}  y1={y} x2={1225} y2={y} stroke="#1e3048" strokeWidth={1.2} strokeDasharray="18 12" />
-          <line x1={1275} y1={y} x2={1500} y2={y} stroke="#1e3048" strokeWidth={1.2} strokeDasharray="18 12" />
+          <line x1={0}    y1={y} x2={218}  y2={y} stroke={dashStroke} strokeWidth={1.4} strokeDasharray="16 12" />
+          <line x1={282}  y1={y} x2={718}  y2={y} stroke={dashStroke} strokeWidth={1.4} strokeDasharray="16 12" />
+          <line x1={782}  y1={y} x2={1218} y2={y} stroke={dashStroke} strokeWidth={1.4} strokeDasharray="16 12" />
+          <line x1={1282} y1={y} x2={1500} y2={y} stroke={dashStroke} strokeWidth={1.4} strokeDasharray="16 12" />
         </g>
       ))}
       {[453.5, 456.5].map((y) => (
         <g key={`bmed-${y}`}>
-          <line x1={0}    y1={y} x2={225}  y2={y} stroke="#3a5a82" strokeWidth={1.0} />
-          <line x1={275}  y1={y} x2={725}  y2={y} stroke="#3a5a82" strokeWidth={1.0} />
-          <line x1={775}  y1={y} x2={1225} y2={y} stroke="#3a5a82" strokeWidth={1.0} />
-          <line x1={1275} y1={y} x2={1500} y2={y} stroke="#3a5a82" strokeWidth={1.0} />
+          <line x1={0}    y1={y} x2={218}  y2={y} stroke={medStroke} strokeWidth={1.2} />
+          <line x1={282}  y1={y} x2={718}  y2={y} stroke={medStroke} strokeWidth={1.2} />
+          <line x1={782}  y1={y} x2={1218} y2={y} stroke={medStroke} strokeWidth={1.2} />
+          <line x1={1282} y1={y} x2={1500} y2={y} stroke={medStroke} strokeWidth={1.2} />
         </g>
       ))}
 
-      {/* Vertical cross-street lane markings — 2 lanes per direction.
-          Centres x = 250 / 750 / 1250. Skip intersection windows at y=230..310 and y=415..495. */}
+      {/* ── 9. Vertical Cross-Street Lane Markings ── */}
       {[
-        [237, 250, 263, 0, 230], [237, 250, 263, 310, 415], [237, 250, 263, 495, 600],
-        [737, 750, 763, 0, 230], [737, 750, 763, 310, 415], [737, 750, 763, 495, 600],
-        [1237, 1250, 1263, 0, 230], [1237, 1250, 1263, 310, 415], [1237, 1250, 1263, 495, 600],
+        [237, 250, 263, 0, 222], [237, 250, 263, 318, 407], [237, 250, 263, 503, 600],
+        [737, 750, 763, 0, 222], [737, 750, 763, 318, 407], [737, 750, 763, 503, 600],
+        [1237, 1250, 1263, 0, 222], [1237, 1250, 1263, 318, 407], [1237, 1250, 1263, 503, 600],
       ].map(([xL, xC, xR, y1, y2], i) => (
         <g key={`vert-${i}`}>
-          <line x1={xL} y1={y1} x2={xL} y2={y2} stroke="#1e3048" strokeWidth={1.2} strokeDasharray="18 12" />
-          <line x1={xR} y1={y1} x2={xR} y2={y2} stroke="#1e3048" strokeWidth={1.2} strokeDasharray="18 12" />
-          <line x1={xC - 1.5} y1={y1} x2={xC - 1.5} y2={y2} stroke="#3a5a82" strokeWidth={1.0} />
-          <line x1={xC + 1.5} y1={y1} x2={xC + 1.5} y2={y2} stroke="#3a5a82" strokeWidth={1.0} />
+          <line x1={xL} y1={y1} x2={xL} y2={y2} stroke={dashStroke} strokeWidth={1.4} strokeDasharray="16 12" />
+          <line x1={xR} y1={y1} x2={xR} y2={y2} stroke={dashStroke} strokeWidth={1.4} strokeDasharray="16 12" />
+          <line x1={xC - 1.5} y1={y1} x2={xC - 1.5} y2={y2} stroke={medStroke} strokeWidth={1.2} />
+          <line x1={xC + 1.5} y1={y1} x2={xC + 1.5} y2={y2} stroke={medStroke} strokeWidth={1.2} />
         </g>
       ))}
 
-      {/* Emergency vehicle route lines */}
+      {/* ── 10. Emergency Vehicle Priority Route Lines ── */}
       {activeEvRoutes.map((route, ri) =>
         route.slice(0, -1).map((fromId, si) => {
           const toId = route[si + 1];
@@ -295,18 +433,18 @@ export default function SumoGrid({ showHeat = true }: Props) {
               x1={from.cx} y1={from.cy}
               x2={to.cx}   y2={to.cy}
               stroke="#ef4444"
-              strokeWidth={3}
+              strokeWidth={3.5}
               strokeDasharray="8 4"
-              opacity={0.85}
+              opacity={0.9}
             />
           );
         })
       )}
 
-      {/* Vehicle dots */}
-      <VehicleDots vehicles={vehicles} />
+      {/* ── 11. Vehicle Dots ── */}
+      <VehicleDots vehicles={vehicles} isDay={isDay} />
 
-      {/* Intersection nodes */}
+      {/* ── 12. Intersection Nodes ── */}
       {SUMO_IDS.map((id) => {
         const pos = NODE_POS[id];
         const it  = byId.get(id)!;

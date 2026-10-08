@@ -1,0 +1,12 @@
+{
+  "name": "ai-traffic-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Marg Dhristhi - AI Traffic Management System",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend start",
+    "lint": "npm --prefix frontend run lint"
+  }
+}

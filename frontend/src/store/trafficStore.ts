@@ -47,6 +47,11 @@ interface TrafficStore {
   metricsHistory: MetricsHistoryRow[];
   policyLog: Record<string, PolicyLogEntry[]>;
   activeEvRoutes: string[][];  // Each entry is an ordered list of intersection IDs
+  trackedEvId: string | null;
+  evCameraMode: "none" | "chase" | "dash" | "drone";
+  themeMode: "night" | "day" | "sunset";
+  viewMode: "3d" | "2d";
+  locateTrigger: number;
   // The last config the user successfully started. Powers the Quick-restart
   // button + the System Summary card. null on a fresh session.
   lastStartedConfig: Partial<SimulationConfig> | null;
@@ -56,9 +61,13 @@ interface TrafficStore {
   setMode: (mode: SimulationMode) => void;
   setNetwork: (network: NetworkType) => void;
   selectIntersection: (id: string | null) => void;
+  triggerLocate: (id: string) => void;
   setWsConnected: (connected: boolean) => void;
   appendPolicyLog: (id: string, entry: PolicyLogEntry) => void;
   setActiveEvRoutes: (routes: string[][]) => void;
+  setTrackedEv: (id: string | null, mode?: "none" | "chase" | "dash" | "drone") => void;
+  setThemeMode: (theme: "night" | "day" | "sunset") => void;
+  setViewMode: (view: "3d" | "2d") => void;
   setLastStartedConfig: (cfg: Partial<SimulationConfig> | null) => void;
   reset: () => void;
 }
@@ -74,6 +83,7 @@ export const useTrafficStore = create<TrafficStore>((set) => ({
   simTime: 0,
   intersections: [],
   vehicles: [],
+  locateTrigger: 0,
   metrics: {
     total_vehicles: 0,
     total_completed: 0,
@@ -91,6 +101,10 @@ export const useTrafficStore = create<TrafficStore>((set) => ({
   metricsHistory: [],
   policyLog: {},
   activeEvRoutes: [],
+  trackedEvId: null,
+  evCameraMode: "none",
+  themeMode: "night",
+  viewMode: "3d",
   lastStartedConfig: null,
 
   updateFromTick: (data) =>
@@ -122,8 +136,20 @@ export const useTrafficStore = create<TrafficStore>((set) => ({
   setMode: (mode) => set({ mode }),
   setNetwork: (network) => set({ network }),
   selectIntersection: (id) => set({ selectedIntersection: id }),
+  triggerLocate: (id) =>
+    set((state) => ({
+      selectedIntersection: id,
+      locateTrigger: state.locateTrigger + 1,
+    })),
   setWsConnected: (connected) => set({ wsConnected: connected }),
   setActiveEvRoutes: (routes) => set({ activeEvRoutes: routes }),
+  setTrackedEv: (id, mode = "chase") =>
+    set({
+      trackedEvId: id,
+      evCameraMode: id ? mode : "none",
+    }),
+  setThemeMode: (themeMode) => set({ themeMode }),
+  setViewMode: (viewMode) => set({ viewMode }),
   setLastStartedConfig: (cfg) => set({ lastStartedConfig: cfg }),
 
   appendPolicyLog: (id, entry) =>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTrafficStore } from "@/store/trafficStore";
 import { api } from "@/lib/api";
 
 interface Message {
@@ -9,6 +10,8 @@ interface Message {
 }
 
 export default function ChatWidget() {
+  const themeMode = useTrafficStore((s) => s.themeMode);
+  const isDay = themeMode === "day";
   const [open, setOpen]       = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput]     = useState("");
@@ -52,18 +55,24 @@ export default function ChatWidget() {
 
       {/* Chat panel */}
       {open && (
-        <div className="w-80 h-[420px] flex flex-col bg-[#0d1117] border border-gray-800
-                        rounded-xl shadow-2xl overflow-hidden">
+        <div className={`w-80 h-[420px] flex flex-col border rounded-xl shadow-2xl overflow-hidden backdrop-blur-md transition-all ${
+          isDay ? "bg-white/95 border-slate-200 text-slate-800" : "bg-[#0d1117]/95 border-gray-800 text-gray-200"
+        }`}>
 
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2
-                          bg-[#111827] border-b border-gray-800">
-            <span className="text-[11px] font-semibold text-gray-300 tracking-wide">
+          <div className={`flex items-center justify-between px-3 py-2 border-b ${
+            isDay ? "bg-slate-50/80 border-slate-200 text-slate-800" : "bg-[#111827] border-gray-800 text-gray-300"
+          }`}>
+            <span className={`text-[11px] font-bold tracking-wide ${
+              isDay ? "text-slate-800" : "text-gray-300"
+            }`}>
               AI Traffic Assistant
             </span>
             <button
               onClick={() => setOpen(false)}
-              className="text-gray-600 hover:text-gray-400 text-xs leading-none"
+              className={`text-xs leading-none transition-colors ${
+                isDay ? "text-slate-400 hover:text-slate-700" : "text-gray-600 hover:text-gray-400"
+              }`}
             >
               ✕
             </button>
@@ -73,7 +82,9 @@ export default function ChatWidget() {
           <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2">
             {messages.length === 0 && (
               <>
-                <p className="text-[11px] text-gray-600 text-center mt-6 mb-3">
+                <p className={`text-[11px] text-center mt-6 mb-3 ${
+                  isDay ? "text-slate-500" : "text-gray-500"
+                }`}>
                   Ask me about live traffic conditions,<br />metrics, or signal states.
                 </p>
                 <div className="flex flex-col gap-1.5 mt-1">
@@ -83,9 +94,11 @@ export default function ChatWidget() {
                       type="button"
                       onClick={() => send(p)}
                       disabled={loading}
-                      className="text-left text-[10.5px] bg-[#1f2937] hover:bg-[#27324a]
-                                 border border-gray-700 rounded-md px-2.5 py-1.5
-                                 text-gray-300 disabled:opacity-40 transition-colors"
+                      className={`text-left text-[10.5px] rounded-lg px-2.5 py-1.5 border transition-all font-medium ${
+                        isDay
+                          ? "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700 shadow-xs"
+                          : "bg-[#1f2937] hover:bg-[#27324a] border-gray-700 text-gray-300"
+                      } disabled:opacity-40`}
                     >
                       {p}
                     </button>
@@ -96,10 +109,12 @@ export default function ChatWidget() {
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[85%] rounded-lg px-3 py-2 text-[11px] leading-relaxed ${
+                  className={`max-w-[85%] rounded-lg px-3 py-2 text-[11px] leading-relaxed shadow-xs ${
                     m.role === "user"
-                      ? "bg-blue-600 text-white"
-                      : "bg-[#1f2937] text-gray-300"
+                      ? "bg-blue-600 text-white font-medium"
+                      : isDay
+                        ? "bg-slate-100 border border-slate-200 text-slate-800"
+                        : "bg-[#1f2937] text-gray-300"
                   }`}
                 >
                   {m.content}
@@ -108,7 +123,9 @@ export default function ChatWidget() {
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-[#1f2937] rounded-lg px-3 py-2 text-[11px] text-gray-500">
+                <div className={`rounded-lg px-3 py-2 text-[11px] ${
+                  isDay ? "bg-slate-100 text-slate-500 border border-slate-200" : "bg-[#1f2937] text-gray-500"
+                }`}>
                   <span className="animate-pulse">Thinking…</span>
                 </div>
               </div>
@@ -117,11 +134,15 @@ export default function ChatWidget() {
           </div>
 
           {/* Input */}
-          <div className="px-3 py-2 border-t border-gray-800 flex gap-2">
+          <div className={`px-3 py-2 border-t flex gap-2 ${
+            isDay ? "border-slate-200 bg-slate-50/50" : "border-gray-800 bg-[#0d1117]"
+          }`}>
             <input
-              className="flex-1 bg-[#1f2937] border border-gray-700 rounded-md px-2 py-1.5
-                         text-[11px] text-gray-200 placeholder-gray-600 outline-none
-                         focus:border-blue-600"
+              className={`flex-1 rounded-md px-2.5 py-1.5 text-[11px] outline-none border transition-colors ${
+                isDay
+                  ? "bg-white border-slate-300 text-slate-800 placeholder-slate-400 focus:border-blue-600"
+                  : "bg-[#1f2937] border-gray-700 text-gray-200 placeholder-gray-600 focus:border-blue-600"
+              }`}
               placeholder="Ask about traffic…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -132,7 +153,7 @@ export default function ChatWidget() {
               onClick={() => send()}
               disabled={loading || !input.trim()}
               className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40
-                         rounded-md text-[11px] text-white font-medium transition-colors"
+                         rounded-md text-[11px] text-white font-medium transition-colors shadow-xs"
             >
               ↑
             </button>

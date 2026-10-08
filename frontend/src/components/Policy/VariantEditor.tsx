@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useTrafficStore } from "@/store/trafficStore";
 import SchemaParamPanel from "@/components/Policy/SchemaParamPanel";
+import { Save, RotateCcw, Trash2, CheckCircle2, BookmarkPlus } from "lucide-react";
 import type { ParamFieldDef } from "@/lib/types";
 
 interface Props {
@@ -36,6 +38,8 @@ export default function VariantEditor({
   onResetToDefaults,
 }: Props) {
   const [saveAsName, setSaveAsName] = useState("");
+  const themeMode = useTrafficStore((s) => s.themeMode);
+  const isDay = themeMode === "day";
 
   const updateField = (key: string, value: number) =>
     onParamsChange({ ...params, [key]: value });
@@ -44,106 +48,156 @@ export default function VariantEditor({
   const canSaveExisting = isSaved;
 
   return (
-    <div className="max-w-3xl space-y-6">
-      {/* Header — name + description */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="font-mono text-lg text-gray-200">
-            {isSaved ? name : "— draft —"}
+    <div className="max-w-4xl space-y-6">
+      {/* Header — Name + Description Card */}
+      <div className={`p-5 rounded-2xl border transition-all ${
+        isDay ? "bg-white border-slate-200/90 shadow-sm" : "bg-[#0c1017]/90 border-gray-800 shadow-lg"
+      }`}>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
+            <h1 className={`font-mono text-xl font-bold tracking-tight ${
+              isDay ? "text-slate-900" : "text-white"
+            }`}>
+              {isSaved ? name : "— Working Draft —"}
+            </h1>
+            <span className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-lg border ${
+              isDay
+                ? "bg-blue-50 border-blue-200 text-blue-700 font-bold"
+                : "bg-blue-950/60 border-blue-800 text-blue-300 font-bold"
+            }`}>
+              {familyLabel}
+            </span>
           </div>
-          <span className="text-[10px] uppercase tracking-widest text-gray-500 bg-gray-900 border border-gray-800 rounded px-2 py-0.5">
-            {familyLabel}
-          </span>
+
           {isSaved && (
             <button
               type="button"
               onClick={() => onSetActive(isActive ? "" : name)}
-              className={`text-[10px] rounded px-2 py-0.5 border ${
+              className={`text-xs font-semibold rounded-xl px-3 py-1.5 border flex items-center gap-1.5 transition-all shadow-xs ${
                 isActive
-                  ? "bg-green-900/40 border-green-700 text-green-300"
-                  : "bg-gray-900 border-gray-700 text-gray-400 hover:text-gray-200"
+                  ? "bg-emerald-600 border-emerald-600 text-white font-bold"
+                  : isDay
+                  ? "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+                  : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
               }`}
-              title="When active, the dashboard's Start button uses this variant's params"
+              title="When active, the dashboard's simulation runs use this variant's parameters"
             >
-              {isActive ? "● Active on dashboard" : "Set as active"}
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>{isActive ? "Active on Dashboard" : "Set as Active Policy"}</span>
             </button>
           )}
         </div>
+
         <textarea
           rows={2}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          placeholder="Description (e.g. EW-heavy for rush hour, experimental tight redistribution)"
-          className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 resize-none"
+          placeholder="Add an operational description (e.g., Heavy EW rush hour bias with tighter dynamic redistribution)..."
+          className={`w-full rounded-xl px-3.5 py-2.5 text-xs transition-all outline-none border resize-none ${
+            isDay
+              ? "bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 shadow-xs"
+              : "bg-gray-900 border-gray-700 text-gray-200 placeholder-gray-500 focus:bg-gray-950 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          }`}
         />
       </div>
 
-      {/* Tuning fields — schema driven so arterial and highway families
-          share the same renderer. */}
-      <div className="bg-gray-900/40 border border-gray-800 rounded-lg p-4">
-        <SchemaParamPanel fields={fields} params={params} onChange={updateField} />
-      </div>
-
-      {/* Action bar */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <button
-          type="button"
-          onClick={() => onSave(name, description)}
-          disabled={loading || !canSaveExisting}
-          className="bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs rounded px-3 py-1.5"
-          title={canSaveExisting ? "Overwrite this variant" : "Use Save as… to create a new variant"}
-        >
-          Save
-        </button>
-
-        <div className="flex gap-1">
-          <input
-            type="text"
-            value={saveAsName}
-            onChange={(e) => setSaveAsName(e.target.value)}
-            placeholder="new name"
-            className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs font-mono w-40"
-          />
+      {/* Tuning fields container */}
+      <div className={`p-5 rounded-2xl border transition-all ${
+        isDay ? "bg-white border-slate-200/90 shadow-sm" : "bg-[#0c1017]/90 border-gray-800 shadow-lg"
+      }`}>
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-gray-800">
+          <div>
+            <h3 className={`text-xs uppercase font-bold tracking-wider ${
+              isDay ? "text-slate-700" : "text-gray-300"
+            }`}>
+              Algorithm Control Parameters
+            </h3>
+            <p className={`text-[11px] mt-0.5 ${isDay ? "text-slate-500" : "text-gray-400"}`}>
+              Direct coefficient & timing adjustments for signal phase allocation
+            </p>
+          </div>
           <button
             type="button"
-            onClick={async () => {
-              const n = saveAsName.trim();
-              if (!n) return;
-              await onSave(n, description);
-              setSaveAsName("");
-            }}
-            disabled={loading || !saveAsName.trim()}
-            className="bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs rounded px-3 py-1.5"
+            onClick={onResetToDefaults}
+            className={`text-xs font-semibold px-2.5 py-1 rounded-lg border flex items-center gap-1 transition-all ${
+              isDay
+                ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
+                : "bg-gray-800 hover:bg-gray-750 text-gray-300 border-gray-700"
+            }`}
           >
-            Save as…
+            <RotateCcw className="w-3 h-3" />
+            <span>Restore Defaults</span>
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={onResetToDefaults}
-          className="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded px-3 py-1.5"
-        >
-          Reset to defaults
-        </button>
+        <SchemaParamPanel fields={fields} params={params} onChange={updateField} />
+      </div>
+
+      {/* Action Bar */}
+      <div className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${
+        isDay ? "bg-white border-slate-200/90 shadow-sm" : "bg-[#0c1017]/90 border-gray-800 shadow-lg"
+      }`}>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onSave(name, description)}
+            disabled={loading || !canSaveExisting}
+            className="bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl px-4 py-2 flex items-center gap-1.5 shadow-sm shadow-blue-600/20 transition-all"
+            title={canSaveExisting ? "Save modifications to this variant" : "Use 'Save as…' to create a named variant"}
+          >
+            <Save className="w-3.5 h-3.5" />
+            <span>Save Changes</span>
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            <input
+              type="text"
+              value={saveAsName}
+              onChange={(e) => setSaveAsName(e.target.value)}
+              placeholder="New variant name..."
+              className={`rounded-xl px-3 py-2 text-xs font-mono border transition-all outline-none w-48 ${
+                isDay
+                  ? "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
+                  : "bg-gray-900 border-gray-700 text-gray-100 placeholder-gray-500 focus:bg-gray-950 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={async () => {
+                const n = saveAsName.trim();
+                if (!n) return;
+                await onSave(n, description);
+                setSaveAsName("");
+              }}
+              disabled={loading || !saveAsName.trim()}
+              className={`text-xs font-bold rounded-xl px-3 py-2 border flex items-center gap-1.5 transition-all shadow-xs ${
+                isDay
+                  ? "bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-800 disabled:opacity-40"
+                  : "bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-200 disabled:opacity-40"
+              }`}
+            >
+              <BookmarkPlus className="w-3.5 h-3.5 text-blue-500" />
+              <span>Save As…</span>
+            </button>
+          </div>
+        </div>
 
         {isSaved && (
           <button
             type="button"
             onClick={() => onDelete(name)}
             disabled={loading}
-            className="ml-auto bg-red-900/60 hover:bg-red-800 text-red-200 text-xs rounded px-3 py-1.5"
+            className={`text-xs font-semibold rounded-xl px-3 py-2 border flex items-center gap-1.5 transition-all ${
+              isDay
+                ? "bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-700"
+                : "bg-rose-950/40 hover:bg-rose-900/60 border-rose-800 text-rose-300"
+            }`}
           >
-            Delete
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete Variant</span>
           </button>
         )}
       </div>
-
-      {/* Tip */}
-      <p className="text-[11px] text-gray-600">
-        Tip: a variant is just a named parameter set. Set one as <span className="text-green-400">active</span> to
-        have the dashboard&apos;s Start button apply it automatically.
-      </p>
     </div>
   );
 }

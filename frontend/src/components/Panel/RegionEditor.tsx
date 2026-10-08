@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTrafficStore } from "@/store/trafficStore";
 import { api, cameraStreamUrl } from "@/lib/api";
 
 type Pt = [number, number];
@@ -24,6 +25,8 @@ interface Props {
  * Cameras tab; it touches none of the existing camera-stream behaviour.
  */
 export default function RegionEditor({ intersectionId, approach, onClose }: Props) {
+  const themeMode = useTrafficStore((s) => s.themeMode);
+  const isDay = themeMode === "day";
   const [nativeW, setNativeW] = useState(640);
   const [nativeH, setNativeH] = useState(360);
   const [lanes, setLanes] = useState<Lane[]>([]);
@@ -105,16 +108,22 @@ export default function RegionEditor({ intersectionId, approach, onClose }: Prop
   };
 
   const btn = (active: boolean) =>
-    `px-2 py-1 text-[10px] rounded-md border transition-colors ${
+    `px-2 py-1 text-[10px] rounded-lg border font-semibold transition-all ${
       active
-        ? "bg-[#1e3a5f] border-blue-600 text-blue-200"
-        : "bg-[#1f2937] border-gray-700 text-gray-400 hover:text-gray-200"
+        ? isDay
+          ? "bg-blue-600 border-blue-600 text-white shadow-xs"
+          : "bg-[#1e3a5f] border-blue-600 text-blue-200"
+        : isDay
+          ? "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200"
+          : "bg-[#1f2937] border-gray-700 text-gray-400 hover:text-gray-200"
     }`;
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-[10px] text-gray-500 mr-1">Draw:</span>
+        <span className={`text-[10px] mr-1 font-bold uppercase tracking-wider ${
+          isDay ? "text-slate-500" : "text-gray-500"
+        }`}>Draw:</span>
         <button className={btn(mode === "lane")} onClick={() => { setMode("lane"); setDraft([]); }}>
           Lane (polygon)
         </button>
@@ -135,7 +144,9 @@ export default function RegionEditor({ intersectionId, approach, onClose }: Prop
         <button className={btn(false)} onClick={onClose}>Done</button>
       </div>
 
-      <div className="relative w-full bg-black border border-gray-800 rounded-lg overflow-hidden"
+      <div className={`relative w-full bg-black border rounded-xl overflow-hidden ${
+        isDay ? "border-slate-200 shadow-xs" : "border-gray-800"
+      }`}
            style={{ aspectRatio: `${nativeW} / ${nativeH}` }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

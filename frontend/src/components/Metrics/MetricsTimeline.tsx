@@ -31,8 +31,10 @@ type Datum = {
 };
 
 export default function MetricsTimeline() {
-  const history = useTrafficStore((s) => s.metricsHistory);
-  const status  = useTrafficStore((s) => s.status);
+  const history   = useTrafficStore((s) => s.metricsHistory);
+  const status    = useTrafficStore((s) => s.status);
+  const themeMode = useTrafficStore((s) => s.themeMode);
+  const isDay     = themeMode === "day";
   const [mode, setMode] = useState<"live" | "full">("live");
 
   const data: Datum[] = history.map((r) => ({
@@ -46,9 +48,13 @@ export default function MetricsTimeline() {
   const view = mode === "live" ? data.slice(-300) : data;
 
   return (
-    <div className="flex-shrink-0 h-[180px] bg-[#0a0e16] border-t border-gray-800 px-4 py-2">
+    <div className={`flex-shrink-0 h-[180px] px-4 py-2 transition-colors ${
+      isDay ? "bg-white border-t border-slate-200" : "bg-[#0a0e16] border-t border-gray-800"
+    }`}>
       <div className="flex items-center justify-between mb-1">
-        <h2 className="text-[10px] uppercase tracking-widest text-gray-500">
+        <h2 className={`text-[10px] uppercase tracking-widest font-bold ${
+          isDay ? "text-slate-500" : "text-gray-500"
+        }`}>
           Live metrics timeline
         </h2>
         <div className="flex gap-1">
@@ -56,10 +62,14 @@ export default function MetricsTimeline() {
             <button
               key={m}
               onClick={() => setMode(m)}
-              className={`text-[9px] uppercase tracking-wider rounded px-1.5 py-0.5 border ${
+              className={`text-[9px] uppercase tracking-wider rounded px-2 py-0.5 border font-medium transition-all ${
                 mode === m
-                  ? "border-blue-600 bg-blue-950/30 text-blue-200"
-                  : "border-gray-800 text-gray-500 hover:text-gray-300"
+                  ? isDay
+                    ? "border-blue-600 bg-blue-50 text-blue-700 font-bold shadow-xs"
+                    : "border-blue-600 bg-blue-950/40 text-blue-300 font-bold"
+                  : isDay
+                    ? "border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                    : "border-gray-800 text-gray-500 hover:text-gray-300 hover:bg-gray-800/40"
               }`}
             >
               {m}
@@ -69,42 +79,46 @@ export default function MetricsTimeline() {
       </div>
 
       {view.length < 2 ? (
-        <div className="h-[140px] flex items-center justify-center text-[11px] text-gray-600">
+        <div className={`h-[140px] flex items-center justify-center text-[11px] font-medium ${
+          isDay ? "text-slate-500" : "text-gray-500"
+        }`}>
           {status === "running"
-            ? "Collecting samples…"
+            ? "Collecting telemetry samples…"
             : "Start a simulation to see live metrics over time."}
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={140}>
           <LineChart data={view} margin={{ top: 4, right: 24, left: 0, bottom: 0 }}>
-            <CartesianGrid stroke="#1f2937" strokeDasharray="3 3" />
+            <CartesianGrid stroke={isDay ? "#f1f5f9" : "#1f2937"} strokeDasharray="3 3" />
             <XAxis
               dataKey="tick"
-              tick={{ fill: "#9ca3af", fontSize: 9 }}
-              stroke="#374151"
+              tick={{ fill: isDay ? "#64748b" : "#9ca3af", fontSize: 9 }}
+              stroke={isDay ? "#cbd5e1" : "#374151"}
               tickFormatter={(t) => String(t)}
             />
             <YAxis
               yAxisId="left"
-              tick={{ fill: "#9ca3af", fontSize: 9 }}
-              stroke="#374151"
+              tick={{ fill: isDay ? "#64748b" : "#9ca3af", fontSize: 9 }}
+              stroke={isDay ? "#cbd5e1" : "#374151"}
               width={36}
             />
             <YAxis
               yAxisId="right"
               orientation="right"
-              tick={{ fill: "#9ca3af", fontSize: 9 }}
-              stroke="#374151"
+              tick={{ fill: isDay ? "#64748b" : "#9ca3af", fontSize: 9 }}
+              stroke={isDay ? "#cbd5e1" : "#374151"}
               width={28}
             />
             <Tooltip
               contentStyle={{
-                background: "#0d1117",
-                border: "1px solid #374151",
+                background: isDay ? "#ffffff" : "#0d1117",
+                border: isDay ? "1px solid #cbd5e1" : "1px solid #374151",
+                borderRadius: "6px",
+                boxShadow: isDay ? "0 4px 6px -1px rgba(0,0,0,0.1)" : "0 4px 6px -1px rgba(0,0,0,0.4)",
                 fontSize: 10,
-                padding: "4px 6px",
+                padding: "4px 8px",
               }}
-              labelStyle={{ color: "#d1d5db" }}
+              labelStyle={{ color: isDay ? "#1e293b" : "#d1d5db", fontWeight: "bold" }}
               formatter={(v: number) => (typeof v === "number" ? v.toFixed(1) : v)}
             />
             <Legend
