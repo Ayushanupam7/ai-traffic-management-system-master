@@ -102,7 +102,7 @@ export default function UrbanFlow3D() {
     const controls = controlsRef.current;
     if (!info || !camera || !controls) return;
 
-    camera.position.set(info.x, 65, info.z + 80);
+    camera.position.set(info.x, 38, info.z + 55);
     controls.target.set(info.x, 0, info.z);
     controls.update();
   }, []);
@@ -302,13 +302,13 @@ export default function UrbanFlow3D() {
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. Controls
+    // 4. Controls: optimal distance & polar limits so traffic is always visible from an elevated tactical angle
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2.05;
-    controls.minDistance = 2; // Allow smooth close-up zoom without disappearing
-    controls.maxDistance = 650;
+    controls.maxPolarAngle = Math.PI / 2.35; // ~76.6°: prevents camera from dropping down to flat asphalt level
+    controls.minDistance = 14;              // Keeps camera at clear inspection distance so cars are always framed & visible
+    controls.maxDistance = 600;
     controls.target.set(0, 0, 0);
     controlsRef.current = controls;
 
@@ -591,34 +591,34 @@ export default function UrbanFlow3D() {
     const MAX_INSTANCES = 1500;
 
     // 1. Aerodynamic Streamlined Body / Chassis
-    // Sized to true 1:1 scale with lane geometry & queue spacing
-    const carBodyGeo = new THREE.BoxGeometry(0.64, 0.22, 1.36);
-    carBodyGeo.translate(0, 0.20, 0);
+    // Sized proportionate to the 3D road lane geometry (each lane is ~3 units wide)
+    const carBodyGeo = new THREE.BoxGeometry(1.08, 0.38, 2.30);
+    carBodyGeo.translate(0, 0.34, 0);
 
     // 2. Tinted Aerodynamic Cabin
-    const carCabinGeo = new THREE.BoxGeometry(0.54, 0.18, 0.76);
-    carCabinGeo.translate(0, 0.38, -0.06);
+    const carCabinGeo = new THREE.BoxGeometry(0.92, 0.32, 1.30);
+    carCabinGeo.translate(0, 0.65, -0.10);
 
     // 3. 4 Realistic Wheels with Rubber Tires
-    const wheelBase = new THREE.CylinderGeometry(0.12, 0.12, 0.08, 12);
+    const wheelBase = new THREE.CylinderGeometry(0.20, 0.20, 0.14, 12);
     wheelBase.rotateZ(Math.PI / 2);
 
-    const wFL = wheelBase.clone().translate(-0.33, 0.12, 0.42);
-    const wFR = wheelBase.clone().translate(0.33, 0.12, 0.42);
-    const wRL = wheelBase.clone().translate(-0.33, 0.12, -0.42);
-    const wRR = wheelBase.clone().translate(0.33, 0.12, -0.42);
+    const wFL = wheelBase.clone().translate(-0.56, 0.20, 0.70);
+    const wFR = wheelBase.clone().translate(0.56, 0.20, 0.70);
+    const wRL = wheelBase.clone().translate(-0.56, 0.20, -0.70);
+    const wRR = wheelBase.clone().translate(0.56, 0.20, -0.70);
     const carWheelsGeo = BufferGeometryUtils.mergeGeometries([wFL, wFR, wRL, wRR]);
 
     // 4. Front Xenon Headlights
-    const hlBase = new THREE.BoxGeometry(0.12, 0.05, 0.04);
-    const hlL = hlBase.clone().translate(-0.22, 0.22, 0.685);
-    const hlR = hlBase.clone().translate(0.22, 0.22, 0.685);
+    const hlBase = new THREE.BoxGeometry(0.20, 0.08, 0.06);
+    const hlL = hlBase.clone().translate(-0.36, 0.38, 1.16);
+    const hlR = hlBase.clone().translate(0.36, 0.38, 1.16);
     const carHeadlightsGeo = BufferGeometryUtils.mergeGeometries([hlL, hlR]);
 
     // 5. Rear Crimson Tail Lights
-    const tlBase = new THREE.BoxGeometry(0.12, 0.05, 0.04);
-    const tlL = tlBase.clone().translate(-0.22, 0.22, -0.685);
-    const tlR = tlBase.clone().translate(0.22, 0.22, -0.685);
+    const tlBase = new THREE.BoxGeometry(0.20, 0.08, 0.06);
+    const tlL = tlBase.clone().translate(-0.36, 0.38, -1.16);
+    const tlR = tlBase.clone().translate(0.36, 0.38, -1.16);
     const carTaillightsGeo = BufferGeometryUtils.mergeGeometries([tlL, tlR]);
 
     // Automotive Materials with Realistic Specularity
@@ -683,76 +683,76 @@ export default function UrbanFlow3D() {
 
     // EV Body & Chassis
     const evChassis = new THREE.Mesh(
-      new THREE.BoxGeometry(0.76, 0.30, 1.62),
+      new THREE.BoxGeometry(1.24, 0.48, 2.65),
       new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.4 })
     );
-    evChassis.position.y = 0.25;
+    evChassis.position.y = 0.40;
     evGroup.add(evChassis);
 
     // EV Side Chevron Decal
     const evDecalL = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.10, 0.12),
+      new THREE.PlaneGeometry(1.80, 0.20),
       new THREE.MeshBasicMaterial({ color: 0xef4444 })
     );
-    evDecalL.position.set(-0.385, 0.25, 0);
+    evDecalL.position.set(-0.625, 0.40, 0);
     evDecalL.rotation.y = -Math.PI / 2;
     evGroup.add(evDecalL);
 
     const evDecalR = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.10, 0.12),
+      new THREE.PlaneGeometry(1.80, 0.20),
       new THREE.MeshBasicMaterial({ color: 0xef4444 })
     );
-    evDecalR.position.set(0.385, 0.25, 0);
+    evDecalR.position.set(0.625, 0.40, 0);
     evDecalR.rotation.y = Math.PI / 2;
     evGroup.add(evDecalR);
 
     // EV Cabin
     const evCabin = new THREE.Mesh(
-      new THREE.BoxGeometry(0.68, 0.32, 1.05),
+      new THREE.BoxGeometry(1.10, 0.50, 1.70),
       new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.8 })
     );
-    evCabin.position.set(0, 0.52, -0.08);
+    evCabin.position.set(0, 0.82, -0.12);
     evGroup.add(evCabin);
 
     // EV 4 Detailed Wheels with Rims
-    [-0.38, 0.38].forEach((wx) => {
-      [-0.48, 0.48].forEach((wz) => {
+    [-0.62, 0.62].forEach((wx) => {
+      [-0.78, 0.78].forEach((wz) => {
         const evWheel = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.14, 0.14, 0.09, 12),
+          new THREE.CylinderGeometry(0.22, 0.22, 0.15, 12),
           new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.85 })
         );
         evWheel.rotation.z = Math.PI / 2;
-        evWheel.position.set(wx, 0.14, wz);
+        evWheel.position.set(wx, 0.22, wz);
         evGroup.add(evWheel);
 
         const hubcap = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.08, 0.08, 0.095, 10),
+          new THREE.CylinderGeometry(0.12, 0.12, 0.155, 10),
           new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.8, roughness: 0.2 })
         );
         hubcap.rotation.z = Math.PI / 2;
-        hubcap.position.set(wx, 0.14, wz);
+        hubcap.position.set(wx, 0.22, wz);
         evGroup.add(hubcap);
       });
     });
 
     // EV Heavy Grille Guard / Push Bumper
     const pushBumper = new THREE.Mesh(
-      new THREE.BoxGeometry(0.68, 0.16, 0.08),
+      new THREE.BoxGeometry(1.10, 0.25, 0.12),
       new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.8, roughness: 0.3 })
     );
-    pushBumper.position.set(0, 0.22, 0.84);
+    pushBumper.position.set(0, 0.35, 1.36);
     evGroup.add(pushBumper);
 
     // Flashing Strobe Bar on Roof
     const strobe = new THREE.Mesh(
-      new THREE.BoxGeometry(0.56, 0.10, 0.20),
+      new THREE.BoxGeometry(0.85, 0.15, 0.30),
       new THREE.MeshBasicMaterial({ color: 0xef4444 })
     );
-    strobe.position.set(0, 0.72, -0.08);
+    strobe.position.set(0, 1.12, -0.12);
     evGroup.add(strobe);
 
-    const evLight = new THREE.PointLight(0xef4444, 3.5, 25);
-    evLight.position.set(0, 0.85, -0.08);
+    const evLight = new THREE.PointLight(0xef4444, 4.0, 30);
+    evLight.position.set(0, 1.25, -0.12);
     evGroup.add(evLight);
 
     // Forward Headlight Beam
@@ -997,8 +997,8 @@ export default function UrbanFlow3D() {
     // SAFE FOLLOWING DISTANCE & VISUAL COLLISION PREVENTION
     // Ensures clean bumper-to-bumper queue gaps & prevents vehicle overlap.
     // ──────────────────────────────────────────────────────────────────
-    const MIN_FOLLOW_DIST = 1.62; // Center-to-center safe distance
-    const EV_CLEARANCE = 2.4;    // Priority clearance corridor for emergency vehicle
+    const MIN_FOLLOW_DIST = 2.70; // Center-to-center safe distance matching new car length
+    const EV_CLEARANCE = 4.0;     // Priority clearance corridor for emergency vehicle
 
     for (let pass = 0; pass < 2; pass++) {
       for (let i = 0; i < candidates.length; i++) {
@@ -1007,7 +1007,7 @@ export default function UrbanFlow3D() {
           const b = candidates[j];
           const dx = b.tx - a.tx;
           const dz = b.tz - a.tz;
-          if (Math.abs(dx) > 2.6 || Math.abs(dz) > 2.6) continue;
+          if (Math.abs(dx) > 3.8 || Math.abs(dz) > 3.8) continue;
 
           const distSq = dx * dx + dz * dz;
           const reqDist = a.isEv || b.isEv ? EV_CLEARANCE : MIN_FOLLOW_DIST;
@@ -1075,13 +1075,13 @@ export default function UrbanFlow3D() {
         foundEv = v;
         if (evGroup) {
           evGroup.visible = true;
-          evGroup.position.set(tx, 0, tz);
+          evGroup.position.set(tx, 0.08, tz);
           evGroup.rotation.y = rotY;
           evStateRef.current = { x: tx, z: tz, rotY, speed: v.speed };
         }
       } else if (settings.showVehicles) {
         // High-performance shared transform matrix for car body, cabin, wheels & lights
-        dummy.position.set(tx, 0, tz);
+        dummy.position.set(tx, 0.08, tz);
         dummy.rotation.set(0, rotY, 0);
         dummy.updateMatrix();
 
@@ -1236,7 +1236,7 @@ export default function UrbanFlow3D() {
     } else if (mode === "chokepoint") {
       setTrackedEv(null, "none");
       const b0 = INTERSECTIONS_INFO.B0;
-      camera.position.set(b0.x, 60, b0.z + 80);
+      camera.position.set(b0.x, 38, b0.z + 55);
       controls.target.set(b0.x, 0, b0.z);
     } else if (mode === "ev") {
       if (activeEvVehicle) {
