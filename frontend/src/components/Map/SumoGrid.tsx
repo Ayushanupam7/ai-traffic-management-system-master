@@ -93,10 +93,18 @@ function isNorthbound(edge: string): boolean {
   return false;
 }
 
+function getDeterministicLane(id: string, maxLanes: number): number {
+  const numMatch = id.match(/\d+/);
+  if (numMatch) return parseInt(numMatch[0], 10) % maxLanes;
+  let hash = 0;
+  for (let c = 0; c < id.length; c++) hash = ((hash << 5) - hash + id.charCodeAt(c)) | 0;
+  return Math.abs(hash) % maxLanes;
+}
+
 function vehicleToSvg(v: VehicleState): { x: number; y: number } {
   const i = v.lane_id.lastIndexOf("_");
   const edge = i >= 0 ? v.lane_id.slice(0, i) : v.lane_id;
-  const lane = i >= 0 ? parseInt(v.lane_id.slice(i + 1), 10) : 0;
+  const rawLane = i >= 0 ? parseInt(v.lane_id.slice(i + 1), 10) : 0;
 
   // Internal junction edges (start with ':') and unknown edges fall back to
   // the linear world→SVG transform.
@@ -116,7 +124,8 @@ function vehicleToSvg(v: VehicleState): { x: number; y: number } {
     const rows = isTop
       ? (eb ? TOP_E_BOUND_Y : TOP_W_BOUND_Y)
       : (eb ? BOT_E_BOUND_Y : BOT_W_BOUND_Y);
-    return { x: sx, y: rows[Math.min(lane, rows.length - 1)] };
+    const lane = rawLane > 0 && rawLane < rows.length ? rawLane : getDeterministicLane(v.id, rows.length);
+    return { x: sx, y: rows[lane] };
   }
   if (kind === "v") {
     // Decide which cross street by world x (round to nearest column centerline).
@@ -124,7 +133,8 @@ function vehicleToSvg(v: VehicleState): { x: number; y: number } {
     const col = v.x < 850 ? 250 : v.x < 1550 ? 750 : 1250;
     const nb = isNorthbound(edge);
     const cols = nb ? nBoundX(col) : sBoundX(col);
-    return { x: cols[Math.min(lane, cols.length - 1)], y: sy };
+    const lane = rawLane > 0 && rawLane < cols.length ? rawLane : getDeterministicLane(v.id, cols.length);
+    return { x: cols[lane], y: sy };
   }
   return { x: sx, y: sy };
 }
@@ -139,6 +149,28 @@ function makePlaceholder(id: string): IntersectionState {
     vehicle_count: 0,
     avg_wait_s: 0,
   };
+}
+
+type Kind2D = "car" | "motorcycle" | "bus" | "truck" | "rickshaw";
+
+function get2DVehicleKind(v: VehicleState): Kind2D {
+  const t = String(v.type || "").toLowerCase();
+  const id = v.id.toLowerCase();
+  if (t === "motorcycle" || t === "moto" || id.includes("moto") || id.includes("bike")) return "motorcycle";
+  if (t === "bus" || id.includes("bus")) return "bus";
+  if (t === "truck" || id.includes("truck") || id.includes("lorry")) return "truck";
+  if (t === "rickshaw" || t === "autorickshaw" || t === "auto" || id.includes("rickshaw") || id.includes("auto") || id.includes("tuktuk")) return "rickshaw";
+
+  let hash = 0;
+  for (let c = 0; c < id.length; c++) hash = ((hash << 5) - hash + id.charCodeAt(c)) | 0;
+  const numMatch = id.match(/\d+/);
+  const seed = numMatch ? parseInt(numMatch[0], 10) : Math.abs(hash);
+  const mod = (Math.abs(seed) * 19 + 7) % 100;
+  if (mod < 48) return "car";
+  if (mod < 68) return "motorcycle";
+  if (mod < 84) return "rickshaw";
+  if (mod < 92) return "bus";
+  return "truck";
 }
 
 function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boolean }) {
@@ -174,6 +206,67 @@ function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boo
             </g>
           );
         }
+
+        const kind = get2DVehicleKind(v);
+        if (kind === "motorcycle") {
+          return (
+            <circle
+              key={v.id}
+              cx={x}
+              cy={y}
+              r={2.2}
+              fill="#10b981"
+              stroke={isDay ? "#ffffff" : "#064e3b"}
+              strokeWidth={0.8}
+              fillOpacity={0.95}
+            />
+          );
+        }
+        if (kind === "rickshaw") {
+          return (
+            <g key={v.id}>
+              <circle
+                cx={x}
+                cy={y}
+                r={2.8}
+                fill="#15803d"
+                stroke="#fbbf24"
+                strokeWidth={1.3}
+                fillOpacity={0.95}
+              />
+            </g>
+          );
+        }
+        if (kind === "bus") {
+          return (
+            <circle
+              key={v.id}
+              cx={x}
+              cy={y}
+              r={4.5}
+              fill="#d97706"
+              stroke={isDay ? "#ffffff" : "#451a03"}
+              strokeWidth={1.0}
+              fillOpacity={0.95}
+            />
+          );
+        }
+        if (kind === "truck") {
+          return (
+            <circle
+              key={v.id}
+              cx={x}
+              cy={y}
+              r={4.0}
+              fill="#64748b"
+              stroke={isDay ? "#ffffff" : "#1e293b"}
+              strokeWidth={1.0}
+              fillOpacity={0.95}
+            />
+          );
+        }
+
+        // Standard Car
         return (
           <circle
             key={v.id}

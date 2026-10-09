@@ -364,17 +364,24 @@ def _build_route_xml(
         '<?xml version="1.0" encoding="UTF-8"?>',
         f'<!-- Demand profile: {profile_name} | {total_vehicles} vehicles over {duration_s}s -->',
         '<routes>',
-        '    <vType id="car" accel="1.3" decel="2.25" sigma="0.5" '
-        'length="5" minGap="2.5" maxSpeed="5.56"/>',
+        '    <vType id="car" accel="1.5" decel="3.0" sigma="0.5" length="4.8" minGap="2.5" maxSpeed="15.0" vClass="passenger"/>',
+        '    <vType id="motorcycle" accel="2.4" decel="3.5" sigma="0.5" length="2.2" minGap="1.2" maxSpeed="16.0" vClass="motorcycle"/>',
+        '    <vType id="bus" accel="0.9" decel="2.0" sigma="0.3" length="10.5" minGap="3.0" maxSpeed="11.0" vClass="bus"/>',
+        '    <vType id="truck" accel="0.8" decel="1.8" sigma="0.3" length="8.5" minGap="3.0" maxSpeed="10.0" vClass="truck"/>',
+        '    <vType id="autorickshaw" accel="1.2" decel="2.2" sigma="0.5" length="2.8" minGap="1.5" maxSpeed="10.0" vClass="passenger"/>',
     ]
     for name, edges in unique_routes.items():
         lines.append(f'    <route id="{name}" edges="{edges}"/>')
     lines.append("")
 
+    vtypes = ["car", "motorcycle", "bus", "truck", "autorickshaw"]
+    vweights = [0.50, 0.20, 0.08, 0.07, 0.15]
+
     for i, (route_name, _edges) in enumerate(pool):
         depart = round(i * interval, 1)
+        selected_type = rng.choices(vtypes, weights=vweights, k=1)[0]
         lines.append(
-            f'    <vehicle id="v_{i}" type="car" route="{route_name}" '
+            f'    <vehicle id="v_{i}" type="{selected_type}" route="{route_name}" '
             f'depart="{depart}" departLane="best" departSpeed="max"/>'
         )
 

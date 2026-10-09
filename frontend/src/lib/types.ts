@@ -1,6 +1,6 @@
 /** TypeScript type definitions mirroring the Python Pydantic models. */
 
-export type VehicleType = "car" | "truck" | "bus" | "motorcycle" | "emergency";
+export type VehicleType = "car" | "truck" | "bus" | "motorcycle" | "emergency" | "rickshaw" | "autorickshaw" | "auto";
 export type Direction = "N" | "S" | "E" | "W";
 export type SimulationStatus = "idle" | "running" | "paused" | "stopped";
 export type PolicyType =

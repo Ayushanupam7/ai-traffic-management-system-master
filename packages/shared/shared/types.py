@@ -14,6 +14,7 @@ class VehicleType(str, Enum):
     BUS = "bus"
     MOTORCYCLE = "motorcycle"
     EMERGENCY = "emergency"
+    RICKSHAW = "rickshaw"
 
 
 class Direction(str, Enum):

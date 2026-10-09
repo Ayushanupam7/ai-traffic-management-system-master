@@ -30,8 +30,10 @@ def _classify_vehicle_type(vtype_id: str) -> VehicleType:
         return VehicleType.TRUCK
     if "bus" in vtype_lower:
         return VehicleType.BUS
-    if "motorcycle" in vtype_lower or "moto" in vtype_lower:
+    if "motorcycle" in vtype_lower or "moto" in vtype_lower or "bike" in vtype_lower:
         return VehicleType.MOTORCYCLE
+    if "rickshaw" in vtype_lower or "auto" in vtype_lower or "tuktuk" in vtype_lower:
+        return VehicleType.RICKSHAW
     return VehicleType.CAR
 
 

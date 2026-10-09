@@ -79,6 +79,138 @@ interface VisualizerSettings {
   showEvCorridor: boolean;
 }
 
+// ──────────────────────────────────────────────────────────────────
+// SIGNAL ASPECT RESOLVER & 3D HEAD MATERIAL CONTROLLER
+// ──────────────────────────────────────────────────────────────────
+export type SignalAspect = "red" | "yellow" | "green";
+
+export interface IntersectionSignalAspects {
+  N: SignalAspect;
+  E: SignalAspect;
+  S: SignalAspect;
+  W: SignalAspect;
+  EW: SignalAspect;
+  NS: SignalAspect;
+}
+
+export function getIntersectionAspects(inter: IntersectionState): IntersectionSignalAspects {
+  const raw = (inter.signal_state || "").trim();
+  const len = raw.length;
+
+  const aspectFromChars = (chars: string): SignalAspect => {
+    if (chars.includes("G") || chars.includes("g")) return "green";
+    if (chars.includes("Y") || chars.includes("y") || chars.includes("u")) return "yellow";
+    return "red";
+  };
+
+  let n: SignalAspect = "red";
+  let e: SignalAspect = "red";
+  let s: SignalAspect = "red";
+  let w: SignalAspect = "red";
+
+  if (len >= 18) {
+    // 18-link arterial network: North (0..4), East (4..9), South (9..13), West (13..18)
+    n = aspectFromChars(raw.slice(0, 4));
+    e = aspectFromChars(raw.slice(4, 9));
+    s = aspectFromChars(raw.slice(9, 13));
+    w = aspectFromChars(raw.slice(13, 18));
+  } else if (len >= 12) {
+    n = aspectFromChars(raw.slice(0, 3));
+    e = aspectFromChars(raw.slice(3, 6));
+    s = aspectFromChars(raw.slice(6, 9));
+    w = aspectFromChars(raw.slice(9, 12));
+  } else if (len >= 8) {
+    n = aspectFromChars(raw.slice(0, 2));
+    e = aspectFromChars(raw.slice(2, 4));
+    s = aspectFromChars(raw.slice(4, 6));
+    w = aspectFromChars(raw.slice(6, 8));
+  } else if (len >= 4) {
+    n = aspectFromChars(raw.slice(0, 1));
+    e = aspectFromChars(raw.slice(1, 2));
+    s = aspectFromChars(raw.slice(2, 3));
+    w = aspectFromChars(raw.slice(3, 4));
+  } else {
+    // 12-phase split-phase program (N -> E -> S -> W)
+    const p = ((inter.phase_index % 12) + 12) % 12;
+    if (p === 0) n = "green";
+    else if (p === 1) n = "yellow";
+    else if (p === 3) e = "green";
+    else if (p === 4) e = "yellow";
+    else if (p === 6) s = "green";
+    else if (p === 7) s = "yellow";
+    else if (p === 9) w = "green";
+    else if (p === 10) w = "yellow";
+  }
+
+  // Combined EW and NS
+  const ew: SignalAspect =
+    e === "green" || w === "green" ? "green" :
+    e === "yellow" || w === "yellow" ? "yellow" : "red";
+
+  const ns: SignalAspect =
+    n === "green" || s === "green" ? "green" :
+    n === "yellow" || s === "yellow" ? "yellow" : "red";
+
+  return { N: n, E: e, S: s, W: w, EW: ew, NS: ns };
+}
+
+export function applyAspectToHeadMats(
+  mats: { red: THREE.MeshStandardMaterial[]; yellow: THREE.MeshStandardMaterial[]; green: THREE.MeshStandardMaterial[] } | undefined,
+  aspect: SignalAspect
+) {
+  if (!mats) return;
+  if (aspect === "green") {
+    mats.green.forEach((m) => {
+      m.color.setHex(0x10b981);
+      m.emissive.setHex(0x10b981);
+      m.emissiveIntensity = 3.6;
+    });
+    mats.yellow.forEach((m) => {
+      m.color.setHex(0x2d1a04);
+      m.emissive.setHex(0xf59e0b);
+      m.emissiveIntensity = 0.05;
+    });
+    mats.red.forEach((m) => {
+      m.color.setHex(0x2d0505);
+      m.emissive.setHex(0xef4444);
+      m.emissiveIntensity = 0.05;
+    });
+  } else if (aspect === "yellow") {
+    mats.yellow.forEach((m) => {
+      m.color.setHex(0xfbbf24);
+      m.emissive.setHex(0xf59e0b);
+      m.emissiveIntensity = 3.4;
+    });
+    mats.green.forEach((m) => {
+      m.color.setHex(0x062810);
+      m.emissive.setHex(0x10b981);
+      m.emissiveIntensity = 0.05;
+    });
+    mats.red.forEach((m) => {
+      m.color.setHex(0x2d0505);
+      m.emissive.setHex(0xef4444);
+      m.emissiveIntensity = 0.05;
+    });
+  } else {
+    // Red
+    mats.red.forEach((m) => {
+      m.color.setHex(0xff3333);
+      m.emissive.setHex(0xef4444);
+      m.emissiveIntensity = 3.8;
+    });
+    mats.yellow.forEach((m) => {
+      m.color.setHex(0x2d1a04);
+      m.emissive.setHex(0xf59e0b);
+      m.emissiveIntensity = 0.05;
+    });
+    mats.green.forEach((m) => {
+      m.color.setHex(0x062810);
+      m.emissive.setHex(0x10b981);
+      m.emissiveIntensity = 0.05;
+    });
+  }
+}
+
 export default function UrbanFlow3D() {
   const mountRef = useRef<HTMLDivElement>(null);
 
@@ -139,14 +271,38 @@ export default function UrbanFlow3D() {
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
 
-  // Instanced Meshes for high-performance 60 FPS rendering
+  // Instanced Meshes for high-performance 60 FPS rendering across 5 vehicle types:
+  // 1. Cars (Sedan/Coupe)
   const instancedCarsRef = useRef<THREE.InstancedMesh | null>(null);
   const instancedCabinsRef = useRef<THREE.InstancedMesh | null>(null);
   const instancedWheelsRef = useRef<THREE.InstancedMesh | null>(null);
   const instancedHeadlightsRef = useRef<THREE.InstancedMesh | null>(null);
   const instancedTaillightsRef = useRef<THREE.InstancedMesh | null>(null);
+
+  // 2. Motorcycles
+  const instancedMotosRef = useRef<THREE.InstancedMesh | null>(null);
+  const instancedMotoWheelsRef = useRef<THREE.InstancedMesh | null>(null);
+
+  // 3. Buses
+  const instancedBusesRef = useRef<THREE.InstancedMesh | null>(null);
+  const instancedBusGlassRef = useRef<THREE.InstancedMesh | null>(null);
+  const instancedBusWheelsRef = useRef<THREE.InstancedMesh | null>(null);
+  const instancedBusSignsRef = useRef<THREE.InstancedMesh | null>(null);
+
+  // 4. Trucks
+  const instancedTruckCabsRef = useRef<THREE.InstancedMesh | null>(null);
+  const instancedTruckCargoRef = useRef<THREE.InstancedMesh | null>(null);
+  const instancedTruckWheelsRef = useRef<THREE.InstancedMesh | null>(null);
+
+  // 5. Auto-rickshaws (Tuk-Tuk 3-wheeler)
+  const instancedRickshawBodyRef = useRef<THREE.InstancedMesh | null>(null);
+  const instancedRickshawCanopyRef = useRef<THREE.InstancedMesh | null>(null);
+  const instancedRickshawWheelsRef = useRef<THREE.InstancedMesh | null>(null);
+
   const dummyRef = useRef<THREE.Object3D>(new THREE.Object3D());
   const prevVehiclePosRef = useRef<Map<string, { x: number; z: number; rotY: number }>>(new Map());
+  const vehicleLaneMapRef = useRef<Map<string, number>>(new Map());
+  const vehicleKindMapRef = useRef<Map<string, "car" | "motorcycle" | "bus" | "truck" | "rickshaw">>(new Map());
 
   // Dedicated Emergency Vehicle actor
   const evGroupRef = useRef<THREE.Group | null>(null);
@@ -160,6 +316,16 @@ export default function UrbanFlow3D() {
   const congestionGroupRef = useRef<THREE.Group | null>(null);
   const evCorridorGroupRef = useRef<THREE.Group | null>(null);
   const stopBarsRef = useRef<Map<string, THREE.Mesh>>(new Map());
+  const trafficLightHeadsRef = useRef<
+    Map<
+      string,
+      {
+        red: THREE.MeshStandardMaterial[];
+        yellow: THREE.MeshStandardMaterial[];
+        green: THREE.MeshStandardMaterial[];
+      }
+    >
+  >(new Map());
   const lightsRef = useRef<{ ambient: THREE.AmbientLight; dir: THREE.DirectionalLight; hemi: THREE.HemisphereLight } | null>(null);
   const groundMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
   const roadMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
@@ -168,6 +334,9 @@ export default function UrbanFlow3D() {
   const gridHelperRef = useRef<THREE.GridHelper | null>(null);
   const wallMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
   const parkMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const roundaboutLawnMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const roundaboutApronMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const roundaboutCurbMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
 
   // Active EV Vehicle resolution
   const activeEvVehicle = useMemo(() => {
@@ -450,14 +619,25 @@ export default function UrbanFlow3D() {
     dashLineMatRef.current = dashLineMat;
     const crosswalkMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0 });
 
-    // Double yellow medians
+    // Double yellow medians (broken outside intersection boxes to keep center clear)
+    const arterialMedianIntervals = [
+      { start: -240, end: xA - HALF_CROSS - 3.8 },
+      { start: xA + HALF_CROSS + 3.8, end: xB - HALF_CROSS - 3.8 },
+      { start: xB + HALF_CROSS + 3.8, end: xC - HALF_CROSS - 3.8 },
+      { start: xC + HALF_CROSS + 3.8, end: 240 },
+    ];
     [-0.3, 0.3].forEach((offset) => {
       [zTop, zBot].forEach((zVal) => {
-        const medGeo = new THREE.PlaneGeometry(530, 0.22);
-        const medMesh = new THREE.Mesh(medGeo, medianMat);
-        medMesh.rotation.x = -Math.PI / 2;
-        medMesh.position.set(0, 0.05, zVal + offset);
-        detailsGroup.add(medMesh);
+        arterialMedianIntervals.forEach(({ start, end }) => {
+          const len = end - start;
+          if (len > 0) {
+            const medGeo = new THREE.PlaneGeometry(len, 0.22);
+            const medMesh = new THREE.Mesh(medGeo, medianMat);
+            medMesh.rotation.x = -Math.PI / 2;
+            medMesh.position.set((start + end) / 2, 0.05, zVal + offset);
+            detailsGroup.add(medMesh);
+          }
+        });
       });
     });
 
@@ -474,45 +654,440 @@ export default function UrbanFlow3D() {
       });
     });
 
-    // Stop Bars and Intersections
+    // ──────────────────────────────────────────────────────────────────
+    // REALISTIC 3D TRAFFIC LIGHT GANTRIES & DYNAMIC STOP BARS
+    // ──────────────────────────────────────────────────────────────────
+    const signalHousingMat = new THREE.MeshStandardMaterial({
+      color: 0x111827,
+      roughness: 0.35,
+      metalness: 0.6,
+    });
+    const signalPoleMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      roughness: 0.4,
+      metalness: 0.75,
+    });
+    const visorMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a,
+      roughness: 0.5,
+    });
+
+    // Materials for Center Circular Roundabout Island (Matching Image 2)
+    const roundaboutLawnMat = new THREE.MeshStandardMaterial({
+      color: isDay ? 0x16a34a : 0x0f5132,
+      roughness: 0.85,
+    });
+    roundaboutLawnMatRef.current = roundaboutLawnMat;
+
+    const roundaboutApronMat = new THREE.MeshStandardMaterial({
+      color: isDay ? 0xd1d5db : 0x334155,
+      roughness: 0.7,
+    });
+    roundaboutApronMatRef.current = roundaboutApronMat;
+
+    const roundaboutCurbMat = new THREE.MeshStandardMaterial({
+      color: isDay ? 0x94a3b8 : 0x1e293b,
+      roughness: 0.5,
+      metalness: 0.1,
+    });
+    roundaboutCurbMatRef.current = roundaboutCurbMat;
+
+    const shrubMat = new THREE.MeshStandardMaterial({
+      color: isDay ? 0x15803d : 0x064e3b,
+      roughness: 0.9,
+    });
+
+    const centerPedestalMat = new THREE.MeshStandardMaterial({
+      color: isDay ? 0x64748b : 0x0f172a,
+      roughness: 0.4,
+      metalness: 0.2,
+    });
+
+    const treeFoliageMat = new THREE.MeshStandardMaterial({
+      color: isDay ? 0x22c55e : 0x10b981,
+      roughness: 0.7,
+      flatShading: true,
+    });
+
+    // Shark teeth yield triangle shape (Matching Image 2)
+    const sharkToothShape = new THREE.Shape();
+    sharkToothShape.moveTo(0, 0.42);
+    sharkToothShape.lineTo(0.22, -0.2);
+    sharkToothShape.lineTo(-0.22, -0.2);
+    sharkToothShape.closePath();
+    const sharkToothGeo = new THREE.ShapeGeometry(sharkToothShape);
+    const sharkToothMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
     Object.entries(INTERSECTIONS_INFO).forEach(([id, info]) => {
       const { x: jx, z: jz } = info;
 
-      // Stop bars (Dynamic Green / Red based on signal state)
-      const barEW = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.7, HALF_ROAD - 0.5),
+      // ──────────────────────────────────────────────────────────────────
+      // 1. ZEBRA CROSSWALKS ON ALL 4 APPROACHES (Matching Image 1 & Image 2)
+      // ──────────────────────────────────────────────────────────────────
+      const crosswalkStripeW = new THREE.PlaneGeometry(1.8, 0.75);
+      const crosswalkStripeN = new THREE.PlaneGeometry(0.75, 1.8);
+
+      // West Crosswalk (across Arterial, in front of West approach)
+      for (let zo = -HALF_ROAD + 0.9; zo <= HALF_ROAD - 0.9; zo += 1.5) {
+        const stripe = new THREE.Mesh(crosswalkStripeW, crosswalkMat);
+        stripe.rotation.x = -Math.PI / 2;
+        stripe.position.set(jx - HALF_CROSS - 1.8, 0.06, jz + zo);
+        detailsGroup.add(stripe);
+      }
+
+      // East Crosswalk (across Arterial, in front of East approach)
+      for (let zo = -HALF_ROAD + 0.9; zo <= HALF_ROAD - 0.9; zo += 1.5) {
+        const stripe = new THREE.Mesh(crosswalkStripeW, crosswalkMat);
+        stripe.rotation.x = -Math.PI / 2;
+        stripe.position.set(jx + HALF_CROSS + 1.8, 0.06, jz + zo);
+        detailsGroup.add(stripe);
+      }
+
+      // North Crosswalk (across Cross-Street, in front of North approach)
+      for (let xo = -HALF_CROSS + 0.9; xo <= HALF_CROSS - 0.9; xo += 1.5) {
+        const stripe = new THREE.Mesh(crosswalkStripeN, crosswalkMat);
+        stripe.rotation.x = -Math.PI / 2;
+        stripe.position.set(jx + xo, 0.06, jz - HALF_ROAD - 1.8);
+        detailsGroup.add(stripe);
+      }
+
+      // South Crosswalk (across Cross-Street, in front of South approach)
+      for (let xo = -HALF_CROSS + 0.9; xo <= HALF_CROSS - 0.9; xo += 1.5) {
+        const stripe = new THREE.Mesh(crosswalkStripeN, crosswalkMat);
+        stripe.rotation.x = -Math.PI / 2;
+        stripe.position.set(jx + xo, 0.06, jz + HALF_ROAD + 1.8);
+        detailsGroup.add(stripe);
+      }
+
+      // ──────────────────────────────────────────────────────────────────
+      // 2. STOP BARS ON ASPHALT (Behind the zebra crosswalks on the approach side)
+      // ──────────────────────────────────────────────────────────────────
+      // East-West Stop Bars
+      const barEW_East = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.8, HALF_ROAD - 0.6),
         new THREE.MeshBasicMaterial({ color: 0x22c55e })
       );
-      barEW.rotation.x = -Math.PI / 2;
-      barEW.position.set(jx + HALF_CROSS + 0.5, 0.08, jz - HALF_ROAD / 2);
-      detailsGroup.add(barEW);
+      barEW_East.rotation.x = -Math.PI / 2;
+      barEW_East.position.set(jx + HALF_CROSS + 3.2, 0.08, jz - HALF_ROAD / 2);
+      detailsGroup.add(barEW_East);
 
-      const barNS = new THREE.Mesh(
-        new THREE.PlaneGeometry(HALF_CROSS - 0.5, 0.7),
+      const barEW_West = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.8, HALF_ROAD - 0.6),
+        new THREE.MeshBasicMaterial({ color: 0x22c55e })
+      );
+      barEW_West.rotation.x = -Math.PI / 2;
+      barEW_West.position.set(jx - HALF_CROSS - 3.2, 0.08, jz + HALF_ROAD / 2);
+      detailsGroup.add(barEW_West);
+
+      // North-South Stop Bars
+      const barNS_North = new THREE.Mesh(
+        new THREE.PlaneGeometry(HALF_CROSS - 0.6, 0.8),
         new THREE.MeshBasicMaterial({ color: 0xef4444 })
       );
-      barNS.rotation.x = -Math.PI / 2;
-      barNS.position.set(jx - HALF_CROSS / 2, 0.08, jz - HALF_ROAD - 0.5);
-      detailsGroup.add(barNS);
+      barNS_North.rotation.x = -Math.PI / 2;
+      barNS_North.position.set(jx - HALF_CROSS / 2, 0.08, jz - HALF_ROAD - 3.2);
+      detailsGroup.add(barNS_North);
 
-      stopBarsRef.current.set(`${id}_EW`, barEW);
-      stopBarsRef.current.set(`${id}_NS`, barNS);
-
-      // Traffic Signal Poles
-      const pole = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.2, 0.25, 7, 8),
-        new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 })
+      const barNS_South = new THREE.Mesh(
+        new THREE.PlaneGeometry(HALF_CROSS - 0.6, 0.8),
+        new THREE.MeshBasicMaterial({ color: 0xef4444 })
       );
-      pole.position.set(jx - HALF_CROSS - 2, 3.5, jz - HALF_ROAD - 2);
-      detailsGroup.add(pole);
+      barNS_South.rotation.x = -Math.PI / 2;
+      barNS_South.position.set(jx + HALF_CROSS / 2, 0.08, jz + HALF_ROAD + 3.2);
+      detailsGroup.add(barNS_South);
 
-      const arm = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.12, 0.15, 5, 8),
-        new THREE.MeshStandardMaterial({ color: 0x334155 })
+      stopBarsRef.current.set(`${id}_EW_E`, barEW_East);
+      stopBarsRef.current.set(`${id}_EW_W`, barEW_West);
+      stopBarsRef.current.set(`${id}_NS_N`, barNS_North);
+      stopBarsRef.current.set(`${id}_NS_S`, barNS_South);
+
+      // ──────────────────────────────────────────────────────────────────
+      // 3. CENTER CIRCULAR ROUNDABOUT ISLAND & YIELD MARKINGS (Matching Image 2)
+      // ──────────────────────────────────────────────────────────────────
+      const roundaboutGroup = new THREE.Group();
+      roundaboutGroup.position.set(jx, 0, jz);
+
+      // 1. Asphalt circular base disc (smooth dark road surface under roundabout)
+      const rAsphaltGeo = new THREE.CircleGeometry(6.6, 36);
+      const rAsphaltMesh = new THREE.Mesh(rAsphaltGeo, roadMat);
+      rAsphaltMesh.rotation.x = -Math.PI / 2;
+      rAsphaltMesh.position.y = 0.025;
+      rAsphaltMesh.receiveShadow = true;
+      roundaboutGroup.add(rAsphaltMesh);
+
+      // 2. Circular Dashed Lane Guide Marking (Outer circulating ring at radius 5.2)
+      const dashCircRadius = 5.2;
+      const numDashes = 22;
+      const dashAngle = (Math.PI * 2) / numDashes;
+      for (let d = 0; d < numDashes; d++) {
+        const angle = d * dashAngle;
+        const dashMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.18), dashLineMat);
+        dashMesh.rotation.x = -Math.PI / 2;
+        dashMesh.rotation.z = -angle;
+        dashMesh.position.set(
+          Math.cos(angle) * dashCircRadius,
+          0.052,
+          Math.sin(angle) * dashCircRadius
+        );
+        roundaboutGroup.add(dashMesh);
+      }
+
+      // 3. Mountable Concrete Truck Apron (Inner paved collar ring, matching Image 2)
+      const apronGeo = new THREE.RingGeometry(2.9, 3.8, 36);
+      const apronMesh = new THREE.Mesh(apronGeo, roundaboutApronMat);
+      apronMesh.rotation.x = -Math.PI / 2;
+      apronMesh.position.y = 0.055;
+      roundaboutGroup.add(apronMesh);
+
+      // 4. Raised Outer Curb Rim (Cylinder curb wall, matching Image 2)
+      const curbHeight = 0.26;
+      const curbRimGeo = new THREE.CylinderGeometry(2.9, 2.95, curbHeight, 36);
+      const curbRimMesh = new THREE.Mesh(curbRimGeo, roundaboutCurbMat);
+      curbRimMesh.position.y = curbHeight / 2;
+      curbRimMesh.castShadow = true;
+      curbRimMesh.receiveShadow = true;
+      roundaboutGroup.add(curbRimMesh);
+
+      // 5. Lush Center Island Lawn Disk (Vibrant Green Grass, matching Image 2)
+      const lawnGeo = new THREE.CylinderGeometry(2.8, 2.8, 0.06, 36);
+      const lawnMesh = new THREE.Mesh(lawnGeo, roundaboutLawnMat);
+      lawnMesh.position.y = curbHeight + 0.03;
+      lawnMesh.receiveShadow = true;
+      roundaboutGroup.add(lawnMesh);
+
+      // 6. Landscaped Garden / Inner Circular Bush & Modern Centerpiece
+      const shrubRingGeo = new THREE.TorusGeometry(1.4, 0.22, 12, 28);
+      const shrubRingMesh = new THREE.Mesh(shrubRingGeo, shrubMat);
+      shrubRingMesh.rotation.x = Math.PI / 2;
+      shrubRingMesh.position.y = curbHeight + 0.16;
+      roundaboutGroup.add(shrubRingMesh);
+
+      // Center decorative urban planter & stylized low-poly topiary tree
+      const centerPedestal = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.65, 0.75, 0.35, 16),
+        centerPedestalMat
       );
-      arm.rotation.z = Math.PI / 2;
-      arm.position.set(jx - HALF_CROSS, 6.8, jz - HALF_ROAD - 2);
-      detailsGroup.add(arm);
+      centerPedestal.position.y = curbHeight + 0.22;
+      roundaboutGroup.add(centerPedestal);
+
+      const treeTopiary = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.85, 1),
+        treeFoliageMat
+      );
+      treeTopiary.position.y = curbHeight + 0.85;
+      treeTopiary.castShadow = true;
+      roundaboutGroup.add(treeTopiary);
+
+      detailsGroup.add(roundaboutGroup);
+
+      // 7. Shark Teeth Yield Triangles at all 4 approaches (matching Image 2)
+      // West approach (oncoming EB traffic at x = jx - HALF_CROSS - 0.7): pointing -X
+      [1.8, 4.5, 7.2].forEach((zo) => {
+        [-0.32, 0.32].forEach((laneO) => {
+          const tooth = new THREE.Mesh(sharkToothGeo, sharkToothMat);
+          tooth.rotation.x = -Math.PI / 2;
+          tooth.rotation.z = Math.PI / 2;
+          tooth.position.set(jx - HALF_CROSS - 0.7, 0.065, jz + zo + laneO);
+          detailsGroup.add(tooth);
+        });
+      });
+
+      // East approach (oncoming WB traffic at x = jx + HALF_CROSS + 0.7): pointing +X
+      [-1.8, -4.5, -7.2].forEach((zo) => {
+        [-0.32, 0.32].forEach((laneO) => {
+          const tooth = new THREE.Mesh(sharkToothGeo, sharkToothMat);
+          tooth.rotation.x = -Math.PI / 2;
+          tooth.rotation.z = -Math.PI / 2;
+          tooth.position.set(jx + HALF_CROSS + 0.7, 0.065, jz + zo + laneO);
+          detailsGroup.add(tooth);
+        });
+      });
+
+      // North approach (oncoming SB traffic at z = jz - HALF_ROAD - 0.7): pointing -Z
+      [-1.6, -4.2].forEach((xo) => {
+        [-0.32, 0.32].forEach((laneO) => {
+          const tooth = new THREE.Mesh(sharkToothGeo, sharkToothMat);
+          tooth.rotation.x = -Math.PI / 2;
+          tooth.rotation.z = Math.PI;
+          tooth.position.set(jx + xo + laneO, 0.065, jz - HALF_ROAD - 0.7);
+          detailsGroup.add(tooth);
+        });
+      });
+
+      // South approach (oncoming NB traffic at z = jz + HALF_ROAD + 0.7): pointing +Z
+      [1.6, 4.2].forEach((xo) => {
+        [-0.32, 0.32].forEach((laneO) => {
+          const tooth = new THREE.Mesh(sharkToothGeo, sharkToothMat);
+          tooth.rotation.x = -Math.PI / 2;
+          tooth.rotation.z = 0;
+          tooth.position.set(jx + xo + laneO, 0.065, jz + HALF_ROAD + 0.7);
+          detailsGroup.add(tooth);
+        });
+      });
+
+      // Arrays to collect materials for dynamic phase switching
+      const ewRedMats: THREE.MeshStandardMaterial[] = [];
+      const ewYellowMats: THREE.MeshStandardMaterial[] = [];
+      const ewGreenMats: THREE.MeshStandardMaterial[] = [];
+
+      const nsRedMats: THREE.MeshStandardMaterial[] = [];
+      const nsYellowMats: THREE.MeshStandardMaterial[] = [];
+      const nsGreenMats: THREE.MeshStandardMaterial[] = [];
+
+      // Helper to build a 3-aspect LED signal head
+      const createSignalHead = (rotationY: number) => {
+        const headGroup = new THREE.Group();
+
+        // Housing
+        const housing = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.38, 0.38), signalHousingMat);
+        headGroup.add(housing);
+
+        // Lenses
+        const redMat = new THREE.MeshStandardMaterial({
+          color: 0x3b0a0a,
+          emissive: 0xef4444,
+          emissiveIntensity: 0.1,
+          roughness: 0.25,
+        });
+        const redLens = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.12, 16), redMat);
+        redLens.rotation.x = Math.PI / 2;
+        redLens.position.set(0, 0.42, 0.17);
+        headGroup.add(redLens);
+
+        const yellowMat = new THREE.MeshStandardMaterial({
+          color: 0x3b270a,
+          emissive: 0xf59e0b,
+          emissiveIntensity: 0.1,
+          roughness: 0.25,
+        });
+        const yellowLens = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.12, 16), yellowMat);
+        yellowLens.rotation.x = Math.PI / 2;
+        yellowLens.position.set(0, 0, 0.17);
+        headGroup.add(yellowLens);
+
+        const greenMat = new THREE.MeshStandardMaterial({
+          color: 0x0a3b18,
+          emissive: 0x10b981,
+          emissiveIntensity: 0.1,
+          roughness: 0.25,
+        });
+        const greenLens = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.12, 16), greenMat);
+        greenLens.rotation.x = Math.PI / 2;
+        greenLens.position.set(0, -0.42, 0.17);
+        headGroup.add(greenLens);
+
+        // Sun visors over each lens
+        [-0.42, 0, 0.42].forEach((vy) => {
+          const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.16, 12, 1, true, 0, Math.PI), visorMat);
+          visor.rotation.x = -Math.PI / 2;
+          visor.position.set(0, vy + 0.08, 0.18);
+          headGroup.add(visor);
+        });
+
+        headGroup.rotation.y = rotationY;
+        return { headGroup, redMat, yellowMat, greenMat };
+      };
+
+      // ── 4 CORNER TRAFFIC LIGHT POLES (Matching Image 1) ──
+      // Pole 1: Northwest Corner
+      const poleNW = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.26, 7.5, 12), signalPoleMat);
+      poleNW.position.set(jx - HALF_CROSS - 2.0, 3.75, jz - HALF_ROAD - 2.0);
+      detailsGroup.add(poleNW);
+
+      const armNW = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.14, 5.0, 8), signalPoleMat);
+      armNW.rotation.z = Math.PI / 2;
+      armNW.position.set(jx - HALF_CROSS + 0.5, 6.8, jz - HALF_ROAD - 2.0);
+      detailsGroup.add(armNW);
+
+      const sigEW1 = createSignalHead(-Math.PI / 2); // Facing oncoming Eastbound
+      sigEW1.headGroup.position.set(jx - HALF_CROSS + 1.5, 6.2, jz - HALF_ROAD - 2.0);
+      detailsGroup.add(sigEW1.headGroup);
+      ewRedMats.push(sigEW1.redMat);
+      ewYellowMats.push(sigEW1.yellowMat);
+      ewGreenMats.push(sigEW1.greenMat);
+
+      const sigNS1 = createSignalHead(Math.PI); // Facing oncoming Southbound
+      sigNS1.headGroup.position.set(jx - HALF_CROSS - 2.0, 5.2, jz - HALF_ROAD + 0.8);
+      detailsGroup.add(sigNS1.headGroup);
+      nsRedMats.push(sigNS1.redMat);
+      nsYellowMats.push(sigNS1.yellowMat);
+      nsGreenMats.push(sigNS1.greenMat);
+
+      // Pole 2: Northeast Corner
+      const poleNE = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.26, 7.5, 12), signalPoleMat);
+      poleNE.position.set(jx + HALF_CROSS + 2.0, 3.75, jz - HALF_ROAD - 2.0);
+      detailsGroup.add(poleNE);
+
+      const armNE = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.14, 5.0, 8), signalPoleMat);
+      armNE.rotation.z = Math.PI / 2;
+      armNE.position.set(jx + HALF_CROSS - 0.5, 6.8, jz - HALF_ROAD - 2.0);
+      detailsGroup.add(armNE);
+
+      const sigEW2 = createSignalHead(Math.PI / 2); // Facing oncoming Westbound
+      sigEW2.headGroup.position.set(jx + HALF_CROSS - 1.5, 6.2, jz - HALF_ROAD - 2.0);
+      detailsGroup.add(sigEW2.headGroup);
+      ewRedMats.push(sigEW2.redMat);
+      ewYellowMats.push(sigEW2.yellowMat);
+      ewGreenMats.push(sigEW2.greenMat);
+
+      // Pole 3: Southwest Corner
+      const poleSW = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.26, 7.5, 12), signalPoleMat);
+      poleSW.position.set(jx - HALF_CROSS - 2.0, 3.75, jz + HALF_ROAD + 2.0);
+      detailsGroup.add(poleSW);
+
+      const armSW = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.14, 5.0, 8), signalPoleMat);
+      armSW.rotation.x = Math.PI / 2;
+      armSW.position.set(jx - HALF_CROSS - 2.0, 6.8, jz + HALF_ROAD - 0.5);
+      detailsGroup.add(armSW);
+
+      const sigNS2 = createSignalHead(0); // Facing oncoming Northbound
+      sigNS2.headGroup.position.set(jx - HALF_CROSS - 2.0, 6.2, jz + HALF_ROAD - 1.5);
+      detailsGroup.add(sigNS2.headGroup);
+      nsRedMats.push(sigNS2.redMat);
+      nsYellowMats.push(sigNS2.yellowMat);
+      nsGreenMats.push(sigNS2.greenMat);
+
+      // Pole 4: Southeast Corner
+      const poleSE = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.26, 7.5, 12), signalPoleMat);
+      poleSE.position.set(jx + HALF_CROSS + 2.0, 3.75, jz + HALF_ROAD + 2.0);
+      detailsGroup.add(poleSE);
+
+      const armSE = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.14, 5.0, 8), signalPoleMat);
+      armSE.rotation.z = Math.PI / 2;
+      armSE.position.set(jx + HALF_CROSS - 0.5, 6.8, jz + HALF_ROAD + 2.0);
+      detailsGroup.add(armSE);
+
+      // Store in ref for dynamic lighting
+      trafficLightHeadsRef.current.set(`${id}_EW`, {
+        red: ewRedMats,
+        yellow: ewYellowMats,
+        green: ewGreenMats,
+      });
+      trafficLightHeadsRef.current.set(`${id}_NS`, {
+        red: nsRedMats,
+        yellow: nsYellowMats,
+        green: nsGreenMats,
+      });
+      trafficLightHeadsRef.current.set(`${id}_W`, {
+        red: [sigEW1.redMat],
+        yellow: [sigEW1.yellowMat],
+        green: [sigEW1.greenMat],
+      });
+      trafficLightHeadsRef.current.set(`${id}_N`, {
+        red: [sigNS1.redMat],
+        yellow: [sigNS1.yellowMat],
+        green: [sigNS1.greenMat],
+      });
+      trafficLightHeadsRef.current.set(`${id}_E`, {
+        red: [sigEW2.redMat],
+        yellow: [sigEW2.yellowMat],
+        green: [sigEW2.greenMat],
+      });
+      trafficLightHeadsRef.current.set(`${id}_S`, {
+        red: [sigNS2.redMat],
+        yellow: [sigNS2.yellowMat],
+        green: [sigNS2.greenMat],
+      });
     });
 
     // ──────────────────────────────────────────────────────────────────
@@ -586,51 +1161,12 @@ export default function UrbanFlow3D() {
     });
 
     // ──────────────────────────────────────────────────────────────────
-    // HIGH-PERFORMANCE INSTANCED MESHES FOR REGULAR CARS (60 FPS)
+    // HIGH-PERFORMANCE 60 FPS INSTANCED MESHES ACROSS 5 VEHICLE TYPES:
+    // 1. Car  2. Motorcycle  3. Bus  4. Truck  5. Auto-rickshaw
     // ──────────────────────────────────────────────────────────────────
-    const MAX_INSTANCES = 1500;
+    const infiniteSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 10000);
 
-    // 1. Aerodynamic Streamlined Body / Chassis
-    // Sized proportionate to the 3D road lane geometry (each lane is ~3 units wide)
-    const carBodyGeo = new THREE.BoxGeometry(1.08, 0.38, 2.30);
-    carBodyGeo.translate(0, 0.34, 0);
-
-    // 2. Tinted Aerodynamic Cabin
-    const carCabinGeo = new THREE.BoxGeometry(0.92, 0.32, 1.30);
-    carCabinGeo.translate(0, 0.65, -0.10);
-
-    // 3. 4 Realistic Wheels with Rubber Tires
-    const wheelBase = new THREE.CylinderGeometry(0.20, 0.20, 0.14, 12);
-    wheelBase.rotateZ(Math.PI / 2);
-
-    const wFL = wheelBase.clone().translate(-0.56, 0.20, 0.70);
-    const wFR = wheelBase.clone().translate(0.56, 0.20, 0.70);
-    const wRL = wheelBase.clone().translate(-0.56, 0.20, -0.70);
-    const wRR = wheelBase.clone().translate(0.56, 0.20, -0.70);
-    const carWheelsGeo = BufferGeometryUtils.mergeGeometries([wFL, wFR, wRL, wRR]);
-
-    // 4. Front Xenon Headlights
-    const hlBase = new THREE.BoxGeometry(0.20, 0.08, 0.06);
-    const hlL = hlBase.clone().translate(-0.36, 0.38, 1.16);
-    const hlR = hlBase.clone().translate(0.36, 0.38, 1.16);
-    const carHeadlightsGeo = BufferGeometryUtils.mergeGeometries([hlL, hlR]);
-
-    // 5. Rear Crimson Tail Lights
-    const tlBase = new THREE.BoxGeometry(0.20, 0.08, 0.06);
-    const tlL = tlBase.clone().translate(-0.36, 0.38, -1.16);
-    const tlR = tlBase.clone().translate(0.36, 0.38, -1.16);
-    const carTaillightsGeo = BufferGeometryUtils.mergeGeometries([tlL, tlR]);
-
-    // Automotive Materials with Realistic Specularity
-    const carBodyMat = new THREE.MeshStandardMaterial({
-      roughness: 0.25,
-      metalness: 0.55,
-    });
-    const carCabinMat = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
-      roughness: 0.1,
-      metalness: 0.85,
-    });
+    // Shared Automotive Materials
     const carWheelMat = new THREE.MeshStandardMaterial({
       color: 0x18181b,
       roughness: 0.85,
@@ -639,44 +1175,215 @@ export default function UrbanFlow3D() {
     const carHeadlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const carTaillightMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
 
-    // Ensure instanced geometries never get culled when zooming in or panning around the city
-    const infiniteSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 10000);
+    // ──────────────────────── 1. CAR (Sedan / Coupe) ────────────────────────
+    const carBodyGeo = new THREE.BoxGeometry(1.08, 0.38, 2.30);
+    carBodyGeo.translate(0, 0.34, 0);
+
+    const carCabinGeo = new THREE.BoxGeometry(0.92, 0.32, 1.30);
+    carCabinGeo.translate(0, 0.65, -0.10);
+
+    const wheelBase = new THREE.CylinderGeometry(0.20, 0.20, 0.14, 12);
+    wheelBase.rotateZ(Math.PI / 2);
+    const carWheelsGeo = BufferGeometryUtils.mergeGeometries([
+      wheelBase.clone().translate(-0.56, 0.20, 0.70),
+      wheelBase.clone().translate(0.56, 0.20, 0.70),
+      wheelBase.clone().translate(-0.56, 0.20, -0.70),
+      wheelBase.clone().translate(0.56, 0.20, -0.70),
+    ])!;
+
+    const hlBase = new THREE.BoxGeometry(0.20, 0.08, 0.06);
+    const carHeadlightsGeo = BufferGeometryUtils.mergeGeometries([
+      hlBase.clone().translate(-0.36, 0.38, 1.16),
+      hlBase.clone().translate(0.36, 0.38, 1.16),
+    ])!;
+
+    const tlBase = new THREE.BoxGeometry(0.20, 0.08, 0.06);
+    const carTaillightsGeo = BufferGeometryUtils.mergeGeometries([
+      tlBase.clone().translate(-0.36, 0.38, -1.16),
+      tlBase.clone().translate(0.36, 0.38, -1.16),
+    ])!;
+
+    const carBodyMat = new THREE.MeshStandardMaterial({ roughness: 0.25, metalness: 0.55 });
+    const carCabinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.85 });
+
     carBodyGeo.boundingSphere = infiniteSphere;
     carCabinGeo.boundingSphere = infiniteSphere;
-    if (carWheelsGeo) carWheelsGeo.boundingSphere = infiniteSphere;
-    if (carHeadlightsGeo) carHeadlightsGeo.boundingSphere = infiniteSphere;
-    if (carTaillightsGeo) carTaillightsGeo.boundingSphere = infiniteSphere;
+    carWheelsGeo.boundingSphere = infiniteSphere;
+    carHeadlightsGeo.boundingSphere = infiniteSphere;
+    carTaillightsGeo.boundingSphere = infiniteSphere;
 
-    const instancedCars = new THREE.InstancedMesh(carBodyGeo, carBodyMat, MAX_INSTANCES);
-    const instancedCabins = new THREE.InstancedMesh(carCabinGeo, carCabinMat, MAX_INSTANCES);
-    const instancedWheels = new THREE.InstancedMesh(carWheelsGeo, carWheelMat, MAX_INSTANCES);
-    const instancedHeadlights = new THREE.InstancedMesh(carHeadlightsGeo, carHeadlightMat, MAX_INSTANCES);
-    const instancedTaillights = new THREE.InstancedMesh(carTaillightsGeo, carTaillightMat, MAX_INSTANCES);
+    const instancedCars = new THREE.InstancedMesh(carBodyGeo, carBodyMat, 1000);
+    const instancedCabins = new THREE.InstancedMesh(carCabinGeo, carCabinMat, 1000);
+    const instancedWheels = new THREE.InstancedMesh(carWheelsGeo, carWheelMat, 1000);
+    const instancedHeadlights = new THREE.InstancedMesh(carHeadlightsGeo, carHeadlightMat, 1000);
+    const instancedTaillights = new THREE.InstancedMesh(carTaillightsGeo, carTaillightMat, 1000);
 
-    // CRITICAL: Disable frustum culling so Three.js never hides vehicles at close zoom or off-center camera angles
-    instancedCars.frustumCulled = false;
-    instancedCabins.frustumCulled = false;
-    instancedWheels.frustumCulled = false;
-    instancedHeadlights.frustumCulled = false;
-    instancedTaillights.frustumCulled = false;
+    // ──────────────────────── 2. MOTORCYCLE (Two-Wheeler) ────────────────────
+    const motoFrame = new THREE.BoxGeometry(0.24, 0.34, 0.95).translate(0, 0.40, 0);
+    const motoBars = new THREE.BoxGeometry(0.58, 0.05, 0.06).translate(0, 0.64, 0.36);
+    const motoFork = new THREE.BoxGeometry(0.12, 0.36, 0.12).translate(0, 0.44, 0.44);
+    const motoSeat = new THREE.BoxGeometry(0.20, 0.16, 0.36).translate(0, 0.54, -0.12);
+    const motoTorso = new THREE.BoxGeometry(0.28, 0.36, 0.26).translate(0, 0.76, -0.06);
+    const motoHelmet = new THREE.SphereGeometry(0.13, 8, 8).translate(0, 0.98, -0.02);
+    const motoBodyGeo = BufferGeometryUtils.mergeGeometries([
+      motoFrame, motoBars, motoFork, motoSeat, motoTorso, motoHelmet
+    ])!;
+    motoBodyGeo.boundingSphere = infiniteSphere;
 
-    instancedCars.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    instancedCabins.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    instancedWheels.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    instancedHeadlights.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    instancedTaillights.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    const motoWheelBase = new THREE.CylinderGeometry(0.18, 0.18, 0.08, 12).rotateZ(Math.PI / 2);
+    const motoWheelsGeo = BufferGeometryUtils.mergeGeometries([
+      motoWheelBase.clone().translate(0, 0.18, 0.50),
+      motoWheelBase.clone().translate(0, 0.18, -0.48),
+    ])!;
+    motoWheelsGeo.boundingSphere = infiniteSphere;
 
-    scene.add(instancedCars);
-    scene.add(instancedCabins);
-    scene.add(instancedWheels);
-    scene.add(instancedHeadlights);
-    scene.add(instancedTaillights);
+    const motoBodyMat = new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0.5 });
+    const instancedMotos = new THREE.InstancedMesh(motoBodyGeo, motoBodyMat, 500);
+    const instancedMotoWheels = new THREE.InstancedMesh(motoWheelsGeo, carWheelMat, 500);
+
+    // ──────────────────────── 3. BUS (City Transit Coach) ───────────────────
+    const busChassis = new THREE.BoxGeometry(1.42, 1.25, 5.20).translate(0, 0.92, 0);
+    const busRoof = new THREE.BoxGeometry(1.36, 0.12, 5.10).translate(0, 1.58, 0);
+    const busBumperF = new THREE.BoxGeometry(1.44, 0.28, 0.12).translate(0, 0.32, 2.62);
+    const busBumperR = new THREE.BoxGeometry(1.44, 0.28, 0.12).translate(0, 0.32, -2.62);
+    const busBodyGeo = BufferGeometryUtils.mergeGeometries([
+      busChassis, busRoof, busBumperF, busBumperR
+    ])!;
+    busBodyGeo.boundingSphere = infiniteSphere;
+
+    const busGlassGeo = new THREE.BoxGeometry(1.46, 0.45, 4.85);
+    busGlassGeo.translate(0, 1.18, -0.05);
+    busGlassGeo.boundingSphere = infiniteSphere;
+
+    const busSignsGeo = new THREE.BoxGeometry(0.85, 0.16, 0.06);
+    busSignsGeo.translate(0, 1.45, 2.62);
+    busSignsGeo.boundingSphere = infiniteSphere;
+
+    const heavyWheelBase = new THREE.CylinderGeometry(0.26, 0.26, 0.18, 14).rotateZ(Math.PI / 2);
+    const busWheelsGeo = BufferGeometryUtils.mergeGeometries([
+      heavyWheelBase.clone().translate(-0.72, 0.26, 1.75),
+      heavyWheelBase.clone().translate(0.72, 0.26, 1.75),
+      heavyWheelBase.clone().translate(-0.72, 0.26, -1.25),
+      heavyWheelBase.clone().translate(0.72, 0.26, -1.25),
+      heavyWheelBase.clone().translate(-0.72, 0.26, -1.95),
+      heavyWheelBase.clone().translate(0.72, 0.26, -1.95),
+    ])!;
+    busWheelsGeo.boundingSphere = infiniteSphere;
+
+    const busBodyMat = new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0.45 });
+    const busGlassMat = new THREE.MeshStandardMaterial({ color: 0x07111e, roughness: 0.1, metalness: 0.9 });
+    const busSignMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+
+    const instancedBuses = new THREE.InstancedMesh(busBodyGeo, busBodyMat, 300);
+    const instancedBusGlass = new THREE.InstancedMesh(busGlassGeo, busGlassMat, 300);
+    const instancedBusWheels = new THREE.InstancedMesh(busWheelsGeo, carWheelMat, 300);
+    const instancedBusSigns = new THREE.InstancedMesh(busSignsGeo, busSignMat, 300);
+
+    // ──────────────────────── 4. TRUCK (Heavy Cargo Hauler) ──────────────────
+    const truckCab = new THREE.BoxGeometry(1.44, 1.18, 1.45).translate(0, 0.90, 1.55);
+    const truckGrille = new THREE.BoxGeometry(1.36, 0.45, 0.12).translate(0, 0.42, 2.29);
+    const truckWindshield = new THREE.BoxGeometry(1.38, 0.40, 0.12).translate(0, 1.15, 2.22);
+    const stackL = new THREE.CylinderGeometry(0.06, 0.06, 1.1).translate(-0.73, 1.25, 0.92);
+    const stackR = new THREE.CylinderGeometry(0.06, 0.06, 1.1).translate(0.73, 1.25, 0.92);
+    const truckCabGeo = BufferGeometryUtils.mergeGeometries([
+      truckCab, truckGrille, truckWindshield, stackL, stackR
+    ])!;
+    truckCabGeo.boundingSphere = infiniteSphere;
+
+    const truckCargoGeo = new THREE.BoxGeometry(1.46, 1.42, 3.20);
+    truckCargoGeo.translate(0, 1.05, -0.80);
+    truckCargoGeo.boundingSphere = infiniteSphere;
+
+    const truckWheelsGeo = BufferGeometryUtils.mergeGeometries([
+      heavyWheelBase.clone().translate(-0.72, 0.26, 1.55),
+      heavyWheelBase.clone().translate(0.72, 0.26, 1.55),
+      heavyWheelBase.clone().translate(-0.72, 0.26, -1.30),
+      heavyWheelBase.clone().translate(0.72, 0.26, -1.30),
+      heavyWheelBase.clone().translate(-0.72, 0.26, -2.10),
+      heavyWheelBase.clone().translate(0.72, 0.26, -2.10),
+    ])!;
+    truckWheelsGeo.boundingSphere = infiniteSphere;
+
+    const truckCabMat = new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.5 });
+    const truckCargoMat = new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.3 });
+
+    const instancedTruckCabs = new THREE.InstancedMesh(truckCabGeo, truckCabMat, 300);
+    const instancedTruckCargo = new THREE.InstancedMesh(truckCargoGeo, truckCargoMat, 300);
+    const instancedTruckWheels = new THREE.InstancedMesh(truckWheelsGeo, carWheelMat, 300);
+
+    // ──────────────────────── 5. AUTO-RICKSHAW (Tuk-Tuk 3-Wheeler) ───────────
+    const rTub = new THREE.BoxGeometry(0.88, 0.48, 1.70).translate(0, 0.36, -0.05);
+    const rCowl = new THREE.BoxGeometry(0.62, 0.44, 0.45).translate(0, 0.38, 0.85);
+    const rBar = new THREE.BoxGeometry(0.48, 0.06, 0.08).translate(0, 0.58, 0.48);
+    const rPillarF = new THREE.BoxGeometry(0.78, 0.44, 0.08).translate(0, 0.76, 0.45);
+    const rPillarR = new THREE.BoxGeometry(0.86, 0.44, 0.08).translate(0, 0.76, -0.85);
+    const rickshawBodyGeo = BufferGeometryUtils.mergeGeometries([
+      rTub, rCowl, rBar, rPillarF, rPillarR
+    ])!;
+    rickshawBodyGeo.boundingSphere = infiniteSphere;
+
+    // Iconic curved canopy roof
+    const rRoof = new THREE.BoxGeometry(0.92, 0.20, 1.48).translate(0, 0.98, -0.15);
+    const rVisor = new THREE.BoxGeometry(0.72, 0.16, 0.22).translate(0, 0.88, 0.62);
+    const rickshawCanopyGeo = BufferGeometryUtils.mergeGeometries([rRoof, rVisor])!;
+    rickshawCanopyGeo.boundingSphere = infiniteSphere;
+
+    // 3 authentic wheels (1 front centered, 2 rear)
+    const smallWheelBase = new THREE.CylinderGeometry(0.17, 0.17, 0.10, 12).rotateZ(Math.PI / 2);
+    const rickshawWheelsGeo = BufferGeometryUtils.mergeGeometries([
+      smallWheelBase.clone().translate(0, 0.17, 0.75), // Single centered front wheel
+      smallWheelBase.clone().translate(-0.46, 0.17, -0.52), // Rear left
+      smallWheelBase.clone().translate(0.46, 0.17, -0.52), // Rear right
+    ])!;
+    rickshawWheelsGeo.boundingSphere = infiniteSphere;
+
+    const rickshawBodyMat = new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.3 });
+    const rickshawCanopyMat = new THREE.MeshStandardMaterial({
+      color: 0xfbbf24, // Iconic Bright Golden Yellow Tuk-Tuk Roof
+      roughness: 0.25,
+      metalness: 0.2,
+    });
+
+    const instancedRickshawBody = new THREE.InstancedMesh(rickshawBodyGeo, rickshawBodyMat, 500);
+    const instancedRickshawCanopy = new THREE.InstancedMesh(rickshawCanopyGeo, rickshawCanopyMat, 500);
+    const instancedRickshawWheels = new THREE.InstancedMesh(rickshawWheelsGeo, carWheelMat, 500);
+
+    // Disable frustum culling for all instanced meshes so vehicles never clip at close zoom
+    const allMeshes = [
+      instancedCars, instancedCabins, instancedWheels, instancedHeadlights, instancedTaillights,
+      instancedMotos, instancedMotoWheels,
+      instancedBuses, instancedBusGlass, instancedBusWheels, instancedBusSigns,
+      instancedTruckCabs, instancedTruckCargo, instancedTruckWheels,
+      instancedRickshawBody, instancedRickshawCanopy, instancedRickshawWheels,
+    ];
+
+    allMeshes.forEach((mesh) => {
+      mesh.frustumCulled = false;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      scene.add(mesh);
+    });
 
     instancedCarsRef.current = instancedCars;
     instancedCabinsRef.current = instancedCabins;
     instancedWheelsRef.current = instancedWheels;
     instancedHeadlightsRef.current = instancedHeadlights;
     instancedTaillightsRef.current = instancedTaillights;
+
+    instancedMotosRef.current = instancedMotos;
+    instancedMotoWheelsRef.current = instancedMotoWheels;
+
+    instancedBusesRef.current = instancedBuses;
+    instancedBusGlassRef.current = instancedBusGlass;
+    instancedBusWheelsRef.current = instancedBusWheels;
+    instancedBusSignsRef.current = instancedBusSigns;
+
+    instancedTruckCabsRef.current = instancedTruckCabs;
+    instancedTruckCargoRef.current = instancedTruckCargo;
+    instancedTruckWheelsRef.current = instancedTruckWheels;
+
+    instancedRickshawBodyRef.current = instancedRickshawBody;
+    instancedRickshawCanopyRef.current = instancedRickshawCanopy;
+    instancedRickshawWheelsRef.current = instancedRickshawWheels;
 
     // Dedicated Detailed Emergency Vehicle Actor
     const evGroup = new THREE.Group();
@@ -932,7 +1639,8 @@ export default function UrbanFlow3D() {
   }, [selectIntersection]);
 
   // ──────────────────────────────────────────────────────────────────
-  // ULTRA-FAST 60-FPS VEHICLE UPDATES (InstancedMesh)
+  // ULTRA-FAST 60-FPS VEHICLE UPDATES (5 DISTINCT VEHICLE TYPES)
+  // 1. Car  2. Motorcycle  3. Bus  4. Truck  5. Auto-rickshaw
   // ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const instancedCars = instancedCarsRef.current;
@@ -940,20 +1648,37 @@ export default function UrbanFlow3D() {
     const instancedWheels = instancedWheelsRef.current;
     const instancedHeadlights = instancedHeadlightsRef.current;
     const instancedTaillights = instancedTaillightsRef.current;
+
+    const instancedMotos = instancedMotosRef.current;
+    const instancedMotoWheels = instancedMotoWheelsRef.current;
+
+    const instancedBuses = instancedBusesRef.current;
+    const instancedBusGlass = instancedBusGlassRef.current;
+    const instancedBusWheels = instancedBusWheelsRef.current;
+    const instancedBusSigns = instancedBusSignsRef.current;
+
+    const instancedTruckCabs = instancedTruckCabsRef.current;
+    const instancedTruckCargo = instancedTruckCargoRef.current;
+    const instancedTruckWheels = instancedTruckWheelsRef.current;
+
+    const instancedRickshawBody = instancedRickshawBodyRef.current;
+    const instancedRickshawCanopy = instancedRickshawCanopyRef.current;
+    const instancedRickshawWheels = instancedRickshawWheelsRef.current;
+
     const dummy = dummyRef.current;
     const prevMap = prevVehiclePosRef.current;
     const evGroup = evGroupRef.current;
 
-    if (!instancedCars || !instancedCabins || !vehicles) return;
+    if (!instancedCars || !vehicles) return;
 
-    let regularCarCount = 0;
     let foundEv: VehicleState | null = null;
 
-    // Realistic diverse automotive finishes
+    // Palettes for each distinct vehicle type
+    // 1. Cars (sleek metallic automotive finishes)
     const carColors = [
       new THREE.Color(0xf8fafc), // Pearl White Metallic
-      new THREE.Color(0x18181b), // Obsidian / Jet Black
-      new THREE.Color(0x334155), // Charcoal / Graphite
+      new THREE.Color(0x18181b), // Obsidian Black
+      new THREE.Color(0x334155), // Graphite Gray
       new THREE.Color(0x94a3b8), // Nardo Silver Gray
       new THREE.Color(0xb91c1c), // Crimson Red Metallic
       new THREE.Color(0x881337), // Deep Velvet Burgundy
@@ -961,18 +1686,62 @@ export default function UrbanFlow3D() {
       new THREE.Color(0x1e3a8a), // Midnight Sapphire Blue
       new THREE.Color(0x047857), // British Racing Green
       new THREE.Color(0xd97706), // Tuscan Amber Gold
-      new THREE.Color(0xea580c), // Sunset Orange
-      new THREE.Color(0xfacc15), // Urban Taxi Yellow
       new THREE.Color(0x4f46e5), // Royal Indigo
-      new THREE.Color(0x64748b), // Steel Slate
-      new THREE.Color(0xc084fc), // Amethyst Violet
     ];
 
-    // 1. Gather all vehicle candidates and calculate movement headings
+    // 2. Motorcycles (vibrant sport finishes)
+    const motoColors = [
+      new THREE.Color(0x16a34a), // Kawasaki Lime Green
+      new THREE.Color(0xdc2626), // Ducati Racing Scarlet
+      new THREE.Color(0x2563eb), // Yamaha Racing Blue
+      new THREE.Color(0xea580c), // KTM Solar Orange
+      new THREE.Color(0x18181b), // Stealth Matte Black
+      new THREE.Color(0xf8fafc), // Pearl White
+      new THREE.Color(0xfacc15), // Cyber Neon Yellow
+    ];
+
+    // 3. Buses (public transit fleet liveries)
+    const busColors = [
+      new THREE.Color(0x059669), // Rapid Emerald Transit
+      new THREE.Color(0x0284c7), // Metro Royal Cyan
+      new THREE.Color(0xbe123c), // Rapid Express Crimson
+      new THREE.Color(0xd97706), // Citylink Amber Gold
+      new THREE.Color(0x4338ca), // Intercity Indigo
+    ];
+
+    // 4. Trucks (industrial freight fleet finishes)
+    const truckColors = [
+      new THREE.Color(0xf8fafc), // Arctic Logistics White
+      new THREE.Color(0x334155), // Freight Steel Slate
+      new THREE.Color(0x1e293b), // Maritime Deep Navy
+      new THREE.Color(0xb45309), // Industrial Desert Bronze
+      new THREE.Color(0x3f6212), // Cargo Forest Khaki
+      new THREE.Color(0x78716c), // Heavy Granite Stone
+    ];
+
+    // 5. Auto-rickshaws (iconic 3-wheeler liveries with golden-yellow canopy)
+    const rickshawColors = [
+      new THREE.Color(0x15803d), // Classic CNG Emerald Green (Yellow Canopy)
+      new THREE.Color(0x18181b), // Classic Jet Black (Yellow Canopy)
+      new THREE.Color(0x1e3a8a), // Royal Navy Auto (Yellow Canopy)
+      new THREE.Color(0x881337), // Crimson Maroon Auto (Yellow Canopy)
+      new THREE.Color(0x166534), // Forest Green Auto (Yellow Canopy)
+    ];
+
+    // ──────────────────────────────────────────────────────────────────
+    // 1. CLASSIFY ROAD, DIRECTION, LANES & VEHICLE KIND
+    // ──────────────────────────────────────────────────────────────────
+    type VisualVehicleKind = "car" | "motorcycle" | "bus" | "truck" | "rickshaw";
+
     interface VehicleCandidate {
       v: VehicleState;
       id: string;
       isEv: boolean;
+      kind: VisualVehicleKind;
+      road: "arterial" | "cross" | "junction";
+      dir: "EB" | "WB" | "SB" | "NB" | "turning";
+      juncId: string;
+      laneIndex: number;
       tx: number;
       tz: number;
       rotY: number;
@@ -981,106 +1750,543 @@ export default function UrbanFlow3D() {
     const candidates: VehicleCandidate[] = [];
     const maxCars = Math.min(vehicles.length, 1400);
 
+    const vehicleLaneMap = vehicleLaneMapRef.current;
+    if (vehicleLaneMap.size > 2000) {
+      const activeIds = new Set(vehicles.map((v) => v.id));
+      vehicleLaneMap.forEach((_, id) => {
+        if (!activeIds.has(id)) vehicleLaneMap.delete(id);
+      });
+    }
+
+    const vehicleKindMap = vehicleKindMapRef.current;
+    if (vehicleKindMap.size > 2000) {
+      const activeIds = new Set(vehicles.map((v) => v.id));
+      vehicleKindMap.forEach((_, id) => {
+        if (!activeIds.has(id)) vehicleKindMap.delete(id);
+      });
+    }
+
+    // Determine and cache the visual vehicle kind across all 5 types
+    const getVehicleKind = (v: VehicleState): VisualVehicleKind => {
+      const t = String(v.type || "").toLowerCase();
+      const id = v.id.toLowerCase();
+
+      if (t === "motorcycle" || t === "moto" || id.includes("moto") || id.includes("bike")) return "motorcycle";
+      if (t === "bus" || id.includes("bus")) return "bus";
+      if (t === "truck" || id.includes("truck") || id.includes("lorry")) return "truck";
+      if (t === "rickshaw" || t === "autorickshaw" || t === "auto" || id.includes("rickshaw") || id.includes("auto") || id.includes("tuktuk")) return "rickshaw";
+
+      const cached = vehicleKindMap.get(v.id);
+      if (cached) return cached;
+
+      // Realistic diverse urban traffic mix:
+      // ~48% Car, ~20% Motorcycle, ~16% Auto-rickshaw, ~8% Bus, ~8% Truck
+      let hash = 0;
+      for (let c = 0; c < v.id.length; c++) {
+        hash = ((hash << 5) - hash + v.id.charCodeAt(c)) | 0;
+      }
+      const numMatch = v.id.match(/\d+/);
+      const seed = numMatch ? parseInt(numMatch[0], 10) : Math.abs(hash);
+      const mod = (Math.abs(seed) * 19 + 7) % 100;
+
+      let kind: VisualVehicleKind = "car";
+      if (mod < 48) kind = "car";
+      else if (mod < 68) kind = "motorcycle";
+      else if (mod < 84) kind = "rickshaw";
+      else if (mod < 92) kind = "bus";
+      else kind = "truck";
+
+      vehicleKindMap.set(v.id, kind);
+      return kind;
+    };
+
+    // Distribute vehicles across all available lanes so traffic uses all 3 lanes on arterials (and 2 lanes on cross streets)
+    const getVehicleLane = (v: VehicleState, maxLanes: number): number => {
+      if (v.lane_id) {
+        const i = v.lane_id.lastIndexOf("_");
+        if (i >= 0) {
+          const parsed = parseInt(v.lane_id.slice(i + 1), 10);
+          if (!isNaN(parsed) && parsed > 0 && parsed < maxLanes) {
+            vehicleLaneMap.set(v.id, parsed);
+            return parsed;
+          }
+        }
+      }
+
+      const cached = vehicleLaneMap.get(v.id);
+      if (cached !== undefined && cached < maxLanes) {
+        return cached;
+      }
+
+      let hash = 0;
+      for (let c = 0; c < v.id.length; c++) {
+        hash = ((hash << 5) - hash + v.id.charCodeAt(c)) | 0;
+      }
+      const numMatch = v.id.match(/\d+/);
+      const seed = numMatch ? parseInt(numMatch[0], 10) : Math.abs(hash);
+      const assigned = Math.abs(seed) % maxLanes;
+      vehicleLaneMap.set(v.id, assigned);
+      return assigned;
+    };
+
     for (let i = 0; i < maxCars; i++) {
       const v = vehicles[i];
       const isEv = String(v.type) === "emergency" || v.id.toLowerCase().includes("emergency");
+      const kind = getVehicleKind(v);
 
-      const tx = toThreeX(v.x);
-      const tz = toThreeZ(v.y);
+      let tx = toThreeX(v.x);
+      let tz = toThreeZ(v.y);
 
-      // Check heading from previous position
-      let prev = prevMap.get(v.id);
+      // Find nearest intersection
+      let nearestJuncId = "B0";
+      let minJuncDist = Infinity;
+      for (const [id, info] of Object.entries(INTERSECTIONS_INFO)) {
+        const d = Math.hypot(tx - info.x, tz - info.z);
+        if (d < minJuncDist) {
+          minJuncDist = d;
+          nearestJuncId = id;
+        }
+      }
+      const junc = INTERSECTIONS_INFO[nearestJuncId];
+      const jx = junc.x;
+      const jz = junc.z;
+      const dx = tx - jx;
+      const dz = tz - jz;
+
+      let road: "arterial" | "cross" | "junction" = "junction";
+      let dir: "EB" | "WB" | "SB" | "NB" | "turning" = "turning";
+      let laneIndex = 0;
       let rotY = 0;
+
+      // Distance to intersection center
+      let distToCenter = Math.hypot(dx, dz);
+
+      // Classify whether on Arterial (horizontal) or Cross-Street (vertical)
+      const isArterialLikely = Math.abs(dz) <= HALF_ROAD + 2.5 && (Math.abs(dx) > HALF_CROSS + 1.2 || Math.abs(dz) >= Math.abs(dx) * 0.75);
+
+      if (isArterialLikely) {
+        if (tz >= jz) {
+          // Eastbound (heading +X on South side of arterial, 3 lanes)
+          dir = "EB";
+          laneIndex = isEv ? 0 : getVehicleLane(v, 3);
+          const ebLanes = [jz + 1.8, jz + 4.5, jz + 7.2];
+
+          // Align SUMO approach coordinates so cars arrive smoothly at the 3D stop bar
+          if (dx < 0 && dx > -45) {
+            const t = Math.min(1, Math.max(0, (dx + 45) / (45 - 2.3)));
+            tx -= t * 6.91; // Smoothly shifts SUMO stop line (-2.3) to 3D stop line (-9.2)
+          }
+
+          const curDx = tx - jx;
+          // Smooth curved arc around center roundabout circular island only inside circulating area
+          if (Math.abs(curDx) < 6.4) {
+            const flare = Math.cos((curDx / 6.4) * (Math.PI / 2));
+            if (laneIndex === 0) tz = jz + 1.8 + flare * 3.3; // Reaches jz + 5.1 at center
+            else if (laneIndex === 1) tz = jz + 4.5 + flare * 1.6;
+            else tz = jz + 7.2 + flare * 0.5;
+          } else {
+            tz = ebLanes[laneIndex];
+          }
+        } else {
+          // Westbound (heading -X on North side of arterial, 3 lanes)
+          dir = "WB";
+          laneIndex = isEv ? 0 : getVehicleLane(v, 3);
+          const wbLanes = [jz - 1.8, jz - 4.5, jz - 7.2];
+
+          // Align SUMO approach coordinates so cars arrive smoothly at the 3D stop bar
+          if (dx > 0 && dx < 45) {
+            const t = Math.min(1, Math.max(0, (45 - dx) / (45 - 2.3)));
+            tx += t * 6.91;
+          }
+
+          const curDx = tx - jx;
+          if (Math.abs(curDx) < 6.4) {
+            const flare = Math.cos((curDx / 6.4) * (Math.PI / 2));
+            if (laneIndex === 0) tz = jz - 1.8 - flare * 3.3; // Reaches jz - 5.1 at center
+            else if (laneIndex === 1) tz = jz - 4.5 - flare * 1.6;
+            else tz = jz - 7.2 - flare * 0.5;
+          } else {
+            tz = wbLanes[laneIndex];
+          }
+        }
+        road = Math.hypot(tx - jx, tz - jz) < 6.4 ? "junction" : "arterial";
+      } else if (Math.abs(dx) <= HALF_CROSS + 2.5) {
+        if (tx <= jx) {
+          // Southbound (heading +Z on West side of cross-street, 2 lanes)
+          dir = "SB";
+          laneIndex = isEv ? 0 : getVehicleLane(v, 2);
+          const sbLanes = [jx - 1.6, jx - 4.2];
+
+          // Align SUMO approach coordinates so cars arrive smoothly at the 3D stop bar
+          if (dz < 0 && dz > -45) {
+            const t = Math.min(1, Math.max(0, (dz + 45) / (45 - 3.0)));
+            tz -= t * 9.20;
+          }
+
+          const curDz = tz - jz;
+          if (Math.abs(curDz) < 6.4) {
+            const flare = Math.cos((curDz / 6.4) * (Math.PI / 2));
+            if (laneIndex === 0) tx = jx - 1.6 - flare * 3.4; // Reaches jx - 5.0 at center
+            else tx = jx - 4.2 - flare * 1.5;
+          } else {
+            tx = sbLanes[laneIndex];
+          }
+        } else {
+          // Northbound (heading -Z on East side of cross-street, 2 lanes)
+          dir = "NB";
+          laneIndex = isEv ? 0 : getVehicleLane(v, 2);
+          const nbLanes = [jx + 1.6, jx + 4.2];
+
+          // Align SUMO approach coordinates so cars arrive smoothly at the 3D stop bar
+          if (dz > 0 && dz < 45) {
+            const t = Math.min(1, Math.max(0, (45 - dz) / (45 - 3.0)));
+            tz += t * 9.20;
+          }
+
+          const curDz = tz - jz;
+          if (Math.abs(curDz) < 6.4) {
+            const flare = Math.cos((curDz / 6.4) * (Math.PI / 2));
+            if (laneIndex === 0) tx = jx + 1.6 + flare * 3.4; // Reaches jx + 5.0 at center
+            else tx = jx + 4.2 + flare * 1.5;
+          } else {
+            tx = nbLanes[laneIndex];
+          }
+        }
+        road = Math.hypot(tx - jx, tz - jz) < 6.4 ? "junction" : "cross";
+      }
+
+      // ── GUARANTEED CENTER CIRCULAR ISLAND EXCLUSION BARRIER ──
+      // Physical barrier: vehicle body can NEVER intersect or penetrate the center circular island!
+      const currentDist = Math.hypot(tx - jx, tz - jz);
+      const R_ISLAND_BARRIER = 4.75;
+      if (currentDist < R_ISLAND_BARRIER) {
+        const pushRatio = R_ISLAND_BARRIER / Math.max(currentDist, 0.01);
+        tx = jx + (tx - jx) * pushRatio;
+        tz = jz + (tz - jz) * pushRatio;
+      }
+
+      // ── ACCURATE DIRECTIONAL HEADING ──
+      const prev = prevMap.get(v.id);
       if (prev) {
-        const dx = tx - prev.x;
-        const dz = tz - prev.z;
-        if (Math.hypot(dx, dz) > 0.04) {
-          rotY = Math.atan2(dx, dz);
+        const pdx = tx - prev.x;
+        const pdz = tz - prev.z;
+        if (Math.hypot(pdx, pdz) > 0.03) {
+          rotY = Math.atan2(pdx, pdz);
         } else {
           rotY = prev.rotY;
         }
+      } else {
+        if (dir === "EB") rotY = Math.PI / 2;
+        else if (dir === "WB") rotY = -Math.PI / 2;
+        else if (dir === "SB") rotY = 0;
+        else if (dir === "NB") rotY = Math.PI;
+        else rotY = Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? Math.PI / 2 : -Math.PI / 2) : (dz > 0 ? 0 : Math.PI);
       }
-      prevMap.set(v.id, { x: tx, z: tz, rotY });
-      candidates.push({ v, id: v.id, isEv, tx, tz, rotY });
+
+      candidates.push({ v, id: v.id, isEv, kind, road, dir, juncId: nearestJuncId, laneIndex, tx, tz, rotY });
     }
 
     // ──────────────────────────────────────────────────────────────────
-    // SAFE FOLLOWING DISTANCE & VISUAL COLLISION PREVENTION
-    // Ensures clean bumper-to-bumper queue gaps & prevents vehicle overlap.
+    // 2. RED LIGHT STOPPING BEFORE ZEBRA CROSSWALKS & STOP BARS
+    // Vehicles approaching on RED or YELLOW halt firmly behind the stop bar.
+    // They NEVER enter the intersection or roundabout on red.
     // ──────────────────────────────────────────────────────────────────
-    const MIN_FOLLOW_DIST = 2.70; // Center-to-center safe distance matching new car length
-    const EV_CLEARANCE = 4.0;     // Priority clearance corridor for emergency vehicle
+    const signalAspects = new Map<string, IntersectionSignalAspects>();
+    if (intersections && intersections.length > 0) {
+      intersections.forEach((inter) => {
+        signalAspects.set(inter.id, getIntersectionAspects(inter));
+      });
+    }
 
+    const ebLaneOffsets = [1.8, 4.5, 7.2];
+    const wbLaneOffsets = [-1.8, -4.5, -7.2];
+    const sbLaneOffsets = [-1.6, -4.2];
+    const nbLaneOffsets = [1.6, 4.2];
+
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i];
+      if (c.isEv) continue; // Emergency vehicles preempt
+
+      const junc = INTERSECTIONS_INFO[c.juncId];
+      if (!junc) continue;
+      const aspects = signalAspects.get(c.juncId);
+      if (!aspects) continue;
+
+      const jx = junc.x;
+      const jz = junc.z;
+
+      // Stop bars are positioned at 3.2m before junction crosswalk edge
+      if (c.dir === "EB") {
+        const isRedOrYellow = aspects.W !== "green";
+        const stopLineX = jx - HALF_CROSS - 3.2; // ~ jx - 9.2
+        if (isRedOrYellow && c.tx < jx + 1.0) {
+          c.tx = Math.min(c.tx, stopLineX);
+          c.tz = jz + (ebLaneOffsets[c.laneIndex] ?? 4.5);
+          c.rotY = Math.PI / 2;
+        }
+      } else if (c.dir === "WB") {
+        const isRedOrYellow = aspects.E !== "green";
+        const stopLineX = jx + HALF_CROSS + 3.2; // ~ jx + 9.2
+        if (isRedOrYellow && c.tx > jx - 1.0) {
+          c.tx = Math.max(c.tx, stopLineX);
+          c.tz = jz + (wbLaneOffsets[c.laneIndex] ?? -4.5);
+          c.rotY = -Math.PI / 2;
+        }
+      } else if (c.dir === "SB") {
+        const isRedOrYellow = aspects.N !== "green";
+        const stopLineZ = jz - HALF_ROAD - 3.2; // ~ jz - 12.2
+        if (isRedOrYellow && c.tz < jz + 1.0) {
+          c.tz = Math.min(c.tz, stopLineZ);
+          c.tx = jx + (sbLaneOffsets[c.laneIndex] ?? -1.6);
+          c.rotY = 0;
+        }
+      } else if (c.dir === "NB") {
+        const isRedOrYellow = aspects.S !== "green";
+        const stopLineZ = jz + HALF_ROAD + 3.2; // ~ jz + 12.2
+        if (isRedOrYellow && c.tz > jz - 1.0) {
+          c.tz = Math.max(c.tz, stopLineZ);
+          c.tx = jx + (nbLaneOffsets[c.laneIndex] ?? 1.6);
+          c.rotY = Math.PI;
+        }
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    // 3. PURE MULTI-LANE QUEUING BEHIND STOP BARS
+    // Vehicles queue in straight parallel columns across all 3 lanes on
+    // arterials (2 lanes on cross streets) with safe bumper-to-bumper gap.
+    // ──────────────────────────────────────────────────────────────────
+    const getVehicleLength = (k: VisualVehicleKind): number => {
+      if (k === "motorcycle") return 1.8;
+      if (k === "rickshaw") return 2.4;
+      if (k === "car") return 3.2;
+      if (k === "truck") return 4.8;
+      if (k === "bus") return 5.2;
+      return 3.2;
+    };
+
+    const laneGroups = new Map<string, VehicleCandidate[]>();
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i];
+      const junc = INTERSECTIONS_INFO[c.juncId];
+      if (!junc) continue;
+
+      let isApproach = false;
+      if (c.dir === "EB" && c.tx <= junc.x - HALF_CROSS - 1.0) isApproach = true;
+      else if (c.dir === "WB" && c.tx >= junc.x + HALF_CROSS + 1.0) isApproach = true;
+      else if (c.dir === "SB" && c.tz <= junc.z - HALF_ROAD - 1.0) isApproach = true;
+      else if (c.dir === "NB" && c.tz >= junc.z + HALF_ROAD + 1.0) isApproach = true;
+
+      if (!isApproach) continue;
+
+      const key = `${c.juncId}_${c.dir}_${c.laneIndex}`;
+      let group = laneGroups.get(key);
+      if (!group) {
+        group = [];
+        laneGroups.set(key, group);
+      }
+      group.push(c);
+    }
+
+    laneGroups.forEach((cars, key) => {
+      if (cars.length <= 1) return;
+      const isEB = key.includes("_EB_");
+      const isWB = key.includes("_WB_");
+      const isSB = key.includes("_SB_");
+      const isNB = key.includes("_NB_");
+
+      if (isEB) {
+        // Eastbound (+X): lead car has highest tx
+        cars.sort((a, b) => b.tx - a.tx);
+        for (let k = 1; k < cars.length; k++) {
+          const lead = cars[k - 1];
+          const curr = cars[k];
+          const minGap = (getVehicleLength(lead.kind) + getVehicleLength(curr.kind)) / 2;
+          if (curr.tx > lead.tx - minGap) {
+            curr.tx = lead.tx - minGap;
+          }
+          const junc = INTERSECTIONS_INFO[curr.juncId];
+          if (junc) curr.tz = junc.z + (ebLaneOffsets[curr.laneIndex] ?? 4.5);
+          curr.rotY = Math.PI / 2;
+        }
+      } else if (isWB) {
+        // Westbound (-X): lead car has lowest tx
+        cars.sort((a, b) => a.tx - b.tx);
+        for (let k = 1; k < cars.length; k++) {
+          const lead = cars[k - 1];
+          const curr = cars[k];
+          const minGap = (getVehicleLength(lead.kind) + getVehicleLength(curr.kind)) / 2;
+          if (curr.tx < lead.tx + minGap) {
+            curr.tx = lead.tx + minGap;
+          }
+          const junc = INTERSECTIONS_INFO[curr.juncId];
+          if (junc) curr.tz = junc.z + (wbLaneOffsets[curr.laneIndex] ?? -4.5);
+          curr.rotY = -Math.PI / 2;
+        }
+      } else if (isSB) {
+        // Southbound (+Z): lead car has highest tz
+        cars.sort((a, b) => b.tz - a.tz);
+        for (let k = 1; k < cars.length; k++) {
+          const lead = cars[k - 1];
+          const curr = cars[k];
+          const minGap = (getVehicleLength(lead.kind) + getVehicleLength(curr.kind)) / 2;
+          if (curr.tz > lead.tz - minGap) {
+            curr.tz = lead.tz - minGap;
+          }
+          const junc = INTERSECTIONS_INFO[curr.juncId];
+          if (junc) curr.tx = junc.x + (sbLaneOffsets[curr.laneIndex] ?? -1.6);
+          curr.rotY = 0;
+        }
+      } else if (isNB) {
+        // Northbound (-Z): lead car has lowest tz
+        cars.sort((a, b) => a.tz - b.tz);
+        for (let k = 1; k < cars.length; k++) {
+          const lead = cars[k - 1];
+          const curr = cars[k];
+          const minGap = (getVehicleLength(lead.kind) + getVehicleLength(curr.kind)) / 2;
+          if (curr.tz < lead.tz + minGap) {
+            curr.tz = lead.tz + minGap;
+          }
+          const junc = INTERSECTIONS_INFO[curr.juncId];
+          if (junc) curr.tx = junc.x + (nbLaneOffsets[curr.laneIndex] ?? 1.6);
+          curr.rotY = Math.PI;
+        }
+      }
+    });
+
+    // ──────────────────────────────────────────────────────────────────
+    // 4. ROUNDABOUT ENTRANCE YIELDING & ANTI-GRIDLOCK ("DON'T BLOCK THE BOX")
+    // Authorized vehicles on GREEN yield to circulating traffic and wait
+    // if the roundabout circulating space is congested.
+    // ──────────────────────────────────────────────────────────────────
+    const circulatingCounts = new Map<string, number>();
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i];
+      const junc = INTERSECTIONS_INFO[c.juncId];
+      if (!junc) continue;
+      const d = Math.hypot(c.tx - junc.x, c.tz - junc.z);
+      if (d < 6.4) {
+        circulatingCounts.set(c.juncId, (circulatingCounts.get(c.juncId) || 0) + 1);
+      }
+    }
+
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i];
+      if (c.isEv) continue;
+      const junc = INTERSECTIONS_INFO[c.juncId];
+      if (!junc) continue;
+
+      const dCenter = Math.hypot(c.tx - junc.x, c.tz - junc.z);
+      const isApproachingEntrance = dCenter >= 6.2 && dCenter <= 9.8;
+      if (!isApproachingEntrance) continue;
+
+      const inRoundabout = circulatingCounts.get(c.juncId) || 0;
+      let mustYield = inRoundabout >= 3; // Anti-gridlock: do not flood roundabout
+
+      if (!mustYield) {
+        for (let j = 0; j < candidates.length; j++) {
+          if (i === j) continue;
+          const other = candidates[j];
+          if (other.juncId !== c.juncId) continue;
+          const otherD = Math.hypot(other.tx - junc.x, other.tz - junc.z);
+          if (other.isEv || (otherD < 6.4 && Math.hypot(c.tx - other.tx, c.tz - other.tz) < 5.0)) {
+            mustYield = true;
+            break;
+          }
+        }
+      }
+
+      if (mustYield) {
+        if (c.dir === "EB") c.tx = Math.min(c.tx, junc.x - HALF_CROSS - 0.7);
+        else if (c.dir === "WB") c.tx = Math.max(c.tx, junc.x + HALF_CROSS + 0.7);
+        else if (c.dir === "SB") c.tz = Math.min(c.tz, junc.z - HALF_ROAD - 0.7);
+        else if (c.dir === "NB") c.tz = Math.max(c.tz, junc.z + HALF_ROAD + 0.7);
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    // 5. PAIRWISE CONFLICT RESOLUTION FOR CIRCULATING VEHICLES
+    // Prevents overlaps for active vehicles circulating inside the roundabout
+    // ──────────────────────────────────────────────────────────────────
+    const MIN_CAR_DIST = 3.2;
     for (let pass = 0; pass < 2; pass++) {
       for (let i = 0; i < candidates.length; i++) {
-        const a = candidates[i];
+        const c1 = candidates[i];
+        const junc = INTERSECTIONS_INFO[c1.juncId];
+        if (!junc) continue;
+        const d1 = Math.hypot(c1.tx - junc.x, c1.tz - junc.z);
+        if (d1 > 6.4) continue;
+
         for (let j = i + 1; j < candidates.length; j++) {
-          const b = candidates[j];
-          const dx = b.tx - a.tx;
-          const dz = b.tz - a.tz;
-          if (Math.abs(dx) > 3.8 || Math.abs(dz) > 3.8) continue;
+          const c2 = candidates[j];
+          if (c2.juncId !== c1.juncId) continue;
+          const d2 = Math.hypot(c2.tx - junc.x, c2.tz - junc.z);
+          if (d2 > 6.4) continue;
 
-          const distSq = dx * dx + dz * dz;
-          const reqDist = a.isEv || b.isEv ? EV_CLEARANCE : MIN_FOLLOW_DIST;
+          const dist = Math.hypot(c1.tx - c2.tx, c1.tz - c2.tz);
+          if (dist < MIN_CAR_DIST) {
+            let p1 = 0;
+            let p2 = 0;
+            if (c1.isEv) p1 += 100;
+            if (c2.isEv) p2 += 100;
+            if (d1 < d2) p1 += 5; else p2 += 5;
 
-          if (distSq < reqDist * reqDist) {
-            let dist = Math.sqrt(distSq);
-            let nx: number;
-            let nz: number;
-            if (dist < 0.001) {
-              nx = Math.sin(b.rotY || 0);
-              nz = Math.cos(b.rotY || 0);
-              dist = 0.001;
-            } else {
-              nx = dx / dist;
-              nz = dz / dist;
-            }
-            const overlap = reqDist - dist;
+            const primary = p1 >= p2 ? c1 : c2;
+            const yielding = p1 >= p2 ? c2 : c1;
 
-            if (a.isEv) {
-              // Priority corridor: push vehicle B clear of emergency vehicle
-              b.tx += nx * overlap;
-              b.tz += nz * overlap;
-            } else if (b.isEv) {
-              // Priority corridor: push vehicle A clear of emergency vehicle
-              a.tx -= nx * overlap;
-              a.tz -= nz * overlap;
-            } else {
-              // Longitudinal following alignment
-              const fwdAx = Math.sin(a.rotY);
-              const fwdAz = Math.cos(a.rotY);
-              const dotA = nx * fwdAx + nz * fwdAz;
+            const diffX = yielding.tx - primary.tx;
+            const diffZ = yielding.tz - primary.tz;
+            const currentSep = Math.hypot(diffX, diffZ) || 0.001;
+            const pushAmt = (MIN_CAR_DIST - currentSep);
 
-              if (dotA > 0.40) {
-                // Car A is facing Car B: Car A is behind Car B in queue
-                // Push trailing Car A back along its heading vector
-                a.tx -= fwdAx * overlap;
-                a.tz -= fwdAz * overlap;
-              } else if (dotA < -0.40) {
-                // Car B is facing Car A: Car B is behind Car A in queue
-                const fwdBx = Math.sin(b.rotY);
-                const fwdBz = Math.cos(b.rotY);
-                b.tx -= fwdBx * overlap;
-                b.tz -= fwdBz * overlap;
-              } else {
-                // Lateral or turning convergence: separate equally
-                const half = overlap * 0.5;
-                a.tx -= nx * half;
-                a.tz -= nz * half;
-                b.tx += nx * half;
-                b.tz += nz * half;
-              }
+            yielding.tx += (diffX / currentSep) * pushAmt;
+            yielding.tz += (diffZ / currentSep) * pushAmt;
+
+            const yd = Math.hypot(yielding.tx - junc.x, yielding.tz - junc.z);
+            if (yd < 4.75) {
+              const ys = 4.75 / Math.max(yd, 0.01);
+              yielding.tx = junc.x + (yielding.tx - junc.x) * ys;
+              yielding.tz = junc.z + (yielding.tz - junc.z) * ys;
             }
           }
         }
       }
     }
 
+    // Priority clearance for emergency vehicles
+    for (let i = 0; i < candidates.length; i++) {
+      const ev = candidates[i];
+      if (!ev.isEv) continue;
+      for (let j = 0; j < candidates.length; j++) {
+        if (i === j) continue;
+        const other = candidates[j];
+        const dist = Math.hypot(other.tx - ev.tx, other.tz - ev.tz);
+        if (dist < 4.5) {
+          if (ev.dir === "EB") other.tx += 2.2;
+          else if (ev.dir === "WB") other.tx -= 2.2;
+          else if (ev.dir === "SB") other.tz += 2.2;
+          else if (ev.dir === "NB") other.tz -= 2.2;
+        }
+      }
+    }
+
+    // Persist finalized positions for smooth frame-to-frame headings
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i];
+      prevMap.set(c.id, { x: c.tx, z: c.tz, rotY: c.rotY });
+    }
+
     // ──────────────────────────────────────────────────────────────────
-    // RENDER CANDIDATES TO INSTANCED MATRICES
+    // 6. RENDER 5 VEHICLE TYPES TO INSTANCED MESHES (60 FPS)
     // ──────────────────────────────────────────────────────────────────
-    for (let i = 0; i < candidates.length && regularCarCount < 1400; i++) {
-      const { v, id, isEv, tx, tz, rotY } = candidates[i];
+    let carCount = 0;
+    let motoCount = 0;
+    let busCount = 0;
+    let truckCount = 0;
+    let rickshawCount = 0;
+
+    for (let i = 0; i < candidates.length; i++) {
+      const { v, id, isEv, kind, tx, tz, rotY } = candidates[i];
 
       if (isEv) {
         foundEv = v;
@@ -1091,26 +2297,48 @@ export default function UrbanFlow3D() {
           evStateRef.current = { x: tx, z: tz, rotY, speed: v.speed };
         }
       } else if (settings.showVehicles) {
-        // High-performance shared transform matrix for car body, cabin, wheels & lights
         dummy.position.set(tx, 0.08, tz);
         dummy.rotation.set(0, rotY, 0);
         dummy.updateMatrix();
 
-        instancedCars.setMatrixAt(regularCarCount, dummy.matrix);
-        instancedCabins.setMatrixAt(regularCarCount, dummy.matrix);
-        if (instancedWheels) instancedWheels.setMatrixAt(regularCarCount, dummy.matrix);
-        if (instancedHeadlights) instancedHeadlights.setMatrixAt(regularCarCount, dummy.matrix);
-        if (instancedTaillights) instancedTaillights.setMatrixAt(regularCarCount, dummy.matrix);
-
-        // Assign realistic diverse color via full ID string hashing
         let hash = 0;
-        for (let c = 0; c < id.length; c++) {
-          hash = ((hash << 5) - hash + id.charCodeAt(c)) | 0;
-        }
-        const color = carColors[Math.abs(hash) % carColors.length];
-        instancedCars.setColorAt(regularCarCount, color);
+        for (let c = 0; c < id.length; c++) hash = ((hash << 5) - hash + id.charCodeAt(c)) | 0;
+        const colorIdx = Math.abs(hash);
 
-        regularCarCount++;
+        if (kind === "car" && carCount < 1000) {
+          instancedCars?.setMatrixAt(carCount, dummy.matrix);
+          instancedCabins?.setMatrixAt(carCount, dummy.matrix);
+          instancedWheels?.setMatrixAt(carCount, dummy.matrix);
+          instancedHeadlights?.setMatrixAt(carCount, dummy.matrix);
+          instancedTaillights?.setMatrixAt(carCount, dummy.matrix);
+          instancedCars?.setColorAt(carCount, carColors[colorIdx % carColors.length]);
+          carCount++;
+        } else if (kind === "motorcycle" && motoCount < 500) {
+          instancedMotos?.setMatrixAt(motoCount, dummy.matrix);
+          instancedMotoWheels?.setMatrixAt(motoCount, dummy.matrix);
+          instancedMotos?.setColorAt(motoCount, motoColors[colorIdx % motoColors.length]);
+          motoCount++;
+        } else if (kind === "bus" && busCount < 300) {
+          instancedBuses?.setMatrixAt(busCount, dummy.matrix);
+          instancedBusGlass?.setMatrixAt(busCount, dummy.matrix);
+          instancedBusWheels?.setMatrixAt(busCount, dummy.matrix);
+          instancedBusSigns?.setMatrixAt(busCount, dummy.matrix);
+          instancedBuses?.setColorAt(busCount, busColors[colorIdx % busColors.length]);
+          busCount++;
+        } else if (kind === "truck" && truckCount < 300) {
+          instancedTruckCabs?.setMatrixAt(truckCount, dummy.matrix);
+          instancedTruckCargo?.setMatrixAt(truckCount, dummy.matrix);
+          instancedTruckWheels?.setMatrixAt(truckCount, dummy.matrix);
+          instancedTruckCabs?.setColorAt(truckCount, truckColors[colorIdx % truckColors.length]);
+          instancedTruckCargo?.setColorAt(truckCount, truckColors[(colorIdx + 2) % truckColors.length]);
+          truckCount++;
+        } else if (kind === "rickshaw" && rickshawCount < 500) {
+          instancedRickshawBody?.setMatrixAt(rickshawCount, dummy.matrix);
+          instancedRickshawCanopy?.setMatrixAt(rickshawCount, dummy.matrix);
+          instancedRickshawWheels?.setMatrixAt(rickshawCount, dummy.matrix);
+          instancedRickshawBody?.setColorAt(rickshawCount, rickshawColors[colorIdx % rickshawColors.length]);
+          rickshawCount++;
+        }
       }
     }
 
@@ -1119,39 +2347,136 @@ export default function UrbanFlow3D() {
       evStateRef.current = null;
     }
 
-    instancedCars.count = regularCarCount;
-    instancedCabins.count = regularCarCount;
-    if (instancedWheels) instancedWheels.count = regularCarCount;
-    if (instancedHeadlights) instancedHeadlights.count = regularCarCount;
-    if (instancedTaillights) instancedTaillights.count = regularCarCount;
+    // Update Counts & Buffer Flags across all 5 vehicle groups
+    // 1. Cars
+    if (instancedCars) {
+      instancedCars.count = carCount;
+      instancedCars.instanceMatrix.needsUpdate = true;
+      if (instancedCars.instanceColor) instancedCars.instanceColor.needsUpdate = true;
+    }
+    if (instancedCabins) {
+      instancedCabins.count = carCount;
+      instancedCabins.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedWheels) {
+      instancedWheels.count = carCount;
+      instancedWheels.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedHeadlights) {
+      instancedHeadlights.count = carCount;
+      instancedHeadlights.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedTaillights) {
+      instancedTaillights.count = carCount;
+      instancedTaillights.instanceMatrix.needsUpdate = true;
+    }
 
-    instancedCars.instanceMatrix.needsUpdate = true;
-    instancedCabins.instanceMatrix.needsUpdate = true;
-    if (instancedWheels) instancedWheels.instanceMatrix.needsUpdate = true;
-    if (instancedHeadlights) instancedHeadlights.instanceMatrix.needsUpdate = true;
-    if (instancedTaillights) instancedTaillights.instanceMatrix.needsUpdate = true;
-    if (instancedCars.instanceColor) instancedCars.instanceColor.needsUpdate = true;
-  }, [vehicles, settings.showVehicles]);
+    // 2. Motorcycles
+    if (instancedMotos) {
+      instancedMotos.count = motoCount;
+      instancedMotos.instanceMatrix.needsUpdate = true;
+      if (instancedMotos.instanceColor) instancedMotos.instanceColor.needsUpdate = true;
+    }
+    if (instancedMotoWheels) {
+      instancedMotoWheels.count = motoCount;
+      instancedMotoWheels.instanceMatrix.needsUpdate = true;
+    }
+
+    // 3. Buses
+    if (instancedBuses) {
+      instancedBuses.count = busCount;
+      instancedBuses.instanceMatrix.needsUpdate = true;
+      if (instancedBuses.instanceColor) instancedBuses.instanceColor.needsUpdate = true;
+    }
+    if (instancedBusGlass) {
+      instancedBusGlass.count = busCount;
+      instancedBusGlass.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedBusWheels) {
+      instancedBusWheels.count = busCount;
+      instancedBusWheels.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedBusSigns) {
+      instancedBusSigns.count = busCount;
+      instancedBusSigns.instanceMatrix.needsUpdate = true;
+    }
+
+    // 4. Trucks
+    if (instancedTruckCabs) {
+      instancedTruckCabs.count = truckCount;
+      instancedTruckCabs.instanceMatrix.needsUpdate = true;
+      if (instancedTruckCabs.instanceColor) instancedTruckCabs.instanceColor.needsUpdate = true;
+    }
+    if (instancedTruckCargo) {
+      instancedTruckCargo.count = truckCount;
+      instancedTruckCargo.instanceMatrix.needsUpdate = true;
+      if (instancedTruckCargo.instanceColor) instancedTruckCargo.instanceColor.needsUpdate = true;
+    }
+    if (instancedTruckWheels) {
+      instancedTruckWheels.count = truckCount;
+      instancedTruckWheels.instanceMatrix.needsUpdate = true;
+    }
+
+    // 5. Auto-rickshaws
+    if (instancedRickshawBody) {
+      instancedRickshawBody.count = rickshawCount;
+      instancedRickshawBody.instanceMatrix.needsUpdate = true;
+      if (instancedRickshawBody.instanceColor) instancedRickshawBody.instanceColor.needsUpdate = true;
+    }
+    if (instancedRickshawCanopy) {
+      instancedRickshawCanopy.count = rickshawCount;
+      instancedRickshawCanopy.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedRickshawWheels) {
+      instancedRickshawWheels.count = rickshawCount;
+      instancedRickshawWheels.instanceMatrix.needsUpdate = true;
+    }
+  }, [vehicles, settings.showVehicles, intersections]);
 
   // ──────────────────────────────────────────────────────────────────
-  // UPDATE INTERSECTION STOP BARS
+  // UPDATE REALISTIC TRAFFIC LIGHT HEADS & DYNAMIC STOP BARS
   // ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!intersections || intersections.length === 0) return;
+
+    const stopBars = stopBarsRef.current;
+    const signalHeads = trafficLightHeadsRef.current;
+
+    const aspectColorMap: Record<SignalAspect, number> = {
+      green: 0x22c55e,
+      yellow: 0xf59e0b,
+      red: 0xef4444,
+    };
+
     intersections.forEach((inter: IntersectionState) => {
-      const isEWGreen =
-        inter.phase_index === 0 ||
-        inter.signal_state.slice(0, 4).includes("G") ||
-        inter.signal_state.slice(0, 4).includes("g");
+      const aspects = getIntersectionAspects(inter);
 
-      const barEW = stopBarsRef.current.get(`${inter.id}_EW`);
-      const barNS = stopBarsRef.current.get(`${inter.id}_NS`);
+      // 1. Update 3D Gantry Traffic Light Heads (Directional approaches & groups)
+      applyAspectToHeadMats(signalHeads.get(`${inter.id}_W`), aspects.W);
+      applyAspectToHeadMats(signalHeads.get(`${inter.id}_E`), aspects.E);
+      applyAspectToHeadMats(signalHeads.get(`${inter.id}_N`), aspects.N);
+      applyAspectToHeadMats(signalHeads.get(`${inter.id}_S`), aspects.S);
 
-      if (barEW && barEW.material instanceof THREE.MeshBasicMaterial) {
-        barEW.material.color.setHex(isEWGreen ? 0x22c55e : 0xef4444);
+      applyAspectToHeadMats(signalHeads.get(`${inter.id}_EW`), aspects.EW);
+      applyAspectToHeadMats(signalHeads.get(`${inter.id}_NS`), aspects.NS);
+
+      // 2. Update Stop Bars on Asphalt to match active approach aspects
+      const barEWE = stopBars.get(`${inter.id}_EW_E`);
+      const barEWW = stopBars.get(`${inter.id}_EW_W`);
+      const barNSN = stopBars.get(`${inter.id}_NS_N`);
+      const barNSS = stopBars.get(`${inter.id}_NS_S`);
+
+      if (barEWE && barEWE.material instanceof THREE.MeshBasicMaterial) {
+        barEWE.material.color.setHex(aspectColorMap[aspects.E]);
       }
-      if (barNS && barNS.material instanceof THREE.MeshBasicMaterial) {
-        barNS.material.color.setHex(!isEWGreen ? 0x22c55e : 0xef4444);
+      if (barEWW && barEWW.material instanceof THREE.MeshBasicMaterial) {
+        barEWW.material.color.setHex(aspectColorMap[aspects.W]);
+      }
+      if (barNSN && barNSN.material instanceof THREE.MeshBasicMaterial) {
+        barNSN.material.color.setHex(aspectColorMap[aspects.N]);
+      }
+      if (barNSS && barNSS.material instanceof THREE.MeshBasicMaterial) {
+        barNSS.material.color.setHex(aspectColorMap[aspects.S]);
       }
     });
   }, [intersections]);
@@ -1190,6 +2515,9 @@ export default function UrbanFlow3D() {
       if (gridHelperRef.current) gridHelperRef.current.visible = false;
       if (wallMatRef.current) wallMatRef.current.color.setHex(0xd1d5db);
       if (parkMatRef.current) parkMatRef.current.color.setHex(0x22c55e);
+      if (roundaboutLawnMatRef.current) roundaboutLawnMatRef.current.color.setHex(0x16a34a);
+      if (roundaboutApronMatRef.current) roundaboutApronMatRef.current.color.setHex(0xd1d5db);
+      if (roundaboutCurbMatRef.current) roundaboutCurbMatRef.current.color.setHex(0x94a3b8);
       if (renderer) renderer.toneMappingExposure = 1.05;
     } else {
       // Cyber midnight & moonlight
@@ -1214,6 +2542,9 @@ export default function UrbanFlow3D() {
       if (gridHelperRef.current) gridHelperRef.current.visible = true;
       if (wallMatRef.current) wallMatRef.current.color.setHex(0x1e293b);
       if (parkMatRef.current) parkMatRef.current.color.setHex(0x14532d);
+      if (roundaboutLawnMatRef.current) roundaboutLawnMatRef.current.color.setHex(0x0f5132);
+      if (roundaboutApronMatRef.current) roundaboutApronMatRef.current.color.setHex(0x334155);
+      if (roundaboutCurbMatRef.current) roundaboutCurbMatRef.current.color.setHex(0x1e293b);
       if (renderer) renderer.toneMappingExposure = 1.2;
     }
   }, []);
