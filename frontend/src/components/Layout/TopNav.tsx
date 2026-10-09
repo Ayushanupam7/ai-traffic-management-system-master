@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTrafficStore } from "@/store/trafficStore";
 import {
   Sun,
@@ -12,6 +12,14 @@ import {
   Activity,
   Sparkles,
   SlidersHorizontal,
+  User,
+  Pencil,
+  Check,
+  ChevronDown,
+  Settings as SettingsIcon,
+  Mail,
+  ShieldCheck,
+  X,
 } from "lucide-react";
 
 const TABS = [
@@ -39,6 +47,71 @@ export default function TopNav() {
   const setThemeMode = useTrafficStore((s) => s.setThemeMode);
   const viewMode = useTrafficStore((s) => s.viewMode);
   const setViewMode = useTrafficStore((s) => s.setViewMode);
+  const userName = useTrafficStore((s) => s.userName);
+  const setUserName = useTrafficStore((s) => s.setUserName);
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempName, setTempName] = useState(userName || "User");
+  const [savedBadge, setSavedBadge] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Sync stored username on client load
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("marg_user_name");
+      if (stored) {
+        setUserName(stored);
+        setTempName(stored);
+      }
+    }
+  }, [setUserName]);
+
+  // Keep tempName in sync if userName updates elsewhere
+  useEffect(() => {
+    setTempName(userName || "User");
+  }, [userName]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+        setIsEditing(false);
+      }
+    }
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
+  const userInitials = (userName || "User")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("") || "U";
+
+  const handleSaveUserName = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanName = tempName.trim() || "User";
+    setUserName(cleanName);
+    setTempName(cleanName);
+    setIsEditing(false);
+    setSavedBadge(true);
+    setTimeout(() => setSavedBadge(false), 2000);
+  };
+
+  const handleResetToDefault = () => {
+    setUserName("User");
+    setTempName("User");
+    setIsEditing(false);
+    setSavedBadge(true);
+    setTimeout(() => setSavedBadge(false), 2000);
+  };
 
   const isDay = themeMode === "day";
 
@@ -207,24 +280,152 @@ export default function TopNav() {
           <span className="tracking-wider">{wsConnected ? "ONLINE" : "OFFLINE"}</span>
         </div>
 
-        {/* Creator & Author Profile Chip (Links to Settings) */}
-        <Link
-          href="/settings"
-          title="Creator: Ayush Anupam (ayushanupamofficial7@gmail.com) • Click for Settings & System Details"
-          className="flex items-center gap-2 pl-1 pr-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200/80 dark:bg-[#0f1624] dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-800 transition-all group shadow-sm hover:scale-[1.02]"
-        >
-          <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 via-orange-500 to-indigo-600 text-white text-[10px] font-extrabold flex items-center justify-center shadow-sm">
-            AA
-          </div>
-          <div className="flex flex-col text-left leading-none">
-            <span className="text-[10px] font-bold text-slate-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-              Ayush Anupam
-            </span>
-            <span className="text-[8px] text-slate-500 dark:text-gray-400">
-              Creator
-            </span>
-          </div>
-        </Link>
+        {/* Interactive User Profile & Developer Attribution Chip */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            title={`Active Operator: ${userName || "User"} • Click to edit your name or view developer credits`}
+            className="flex items-center gap-2 pl-1 pr-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200/80 dark:bg-[#0f1624] dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-800 transition-all group shadow-sm hover:scale-[1.02] cursor-pointer"
+          >
+            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 via-orange-500 to-indigo-600 text-white text-[10px] font-extrabold flex items-center justify-center shadow-sm">
+              {userInitials}
+            </div>
+            <div className="flex flex-col text-left leading-none">
+              <span className="text-[10px] font-bold text-slate-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors max-w-[85px] truncate">
+                {userName || "User"}
+              </span>
+              <span className="text-[8px] text-slate-500 dark:text-gray-400 flex items-center gap-0.5">
+                Operator <ChevronDown className="w-2.5 h-2.5 opacity-60" />
+              </span>
+            </div>
+          </button>
+
+          {/* User Profile Popover / Dropdown */}
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-[#0c121e] border border-slate-200 dark:border-gray-800 shadow-2xl p-3.5 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-3">
+              {/* SECTION 1: Active User (Editable) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-gray-500">
+                    <User className="w-3 h-3 text-blue-500" />
+                    <span>Your Profile</span>
+                  </div>
+                  {!isEditing && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold"
+                    >
+                      <Pencil className="w-2.5 h-2.5" />
+                      Edit Name
+                    </button>
+                  )}
+                </div>
+
+                {isEditing ? (
+                  <form onSubmit={handleSaveUserName} className="space-y-2 pt-1">
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-slate-500 dark:text-gray-400 font-medium">
+                        Display Name (Default: User)
+                      </label>
+                      <input
+                        type="text"
+                        value={tempName}
+                        onChange={(e) => setTempName(e.target.value)}
+                        placeholder="Enter name (e.g. User)"
+                        autoFocus
+                        maxLength={30}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-gray-900 border border-slate-300 dark:border-gray-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5 justify-end">
+                      <button
+                        type="button"
+                        onClick={handleResetToDefault}
+                        className="px-2 py-1 text-[10px] font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-800"
+                      >
+                        Reset to &quot;User&quot;
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTempName(userName || "User");
+                          setIsEditing(false);
+                        }}
+                        className="px-2 py-1 text-[10px] font-semibold rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-800"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-3 py-1 text-[10px] font-bold rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 shadow-sm shadow-blue-500/20"
+                      >
+                        <Check className="w-2.5 h-2.5" />
+                        Save
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-gray-900/60 border border-slate-200/80 dark:border-gray-800">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 via-orange-500 to-indigo-600 text-white text-xs font-black flex items-center justify-center shadow-sm">
+                      {userInitials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        {userName || "User"}
+                      </div>
+                      <div className="text-[10px] text-slate-500 dark:text-gray-400">
+                        Active Traffic Operator
+                      </div>
+                    </div>
+                    {savedBadge && (
+                      <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                        <Check className="w-3 h-3" /> Saved
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION 2: Permanent Developer Attribution (Uneditable) */}
+              <div className="pt-2 border-t border-slate-200/80 dark:border-gray-800/80 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-gray-500">
+                  <ShieldCheck className="w-3 h-3 text-amber-500" />
+                  <span>Developer & Creator</span>
+                </div>
+                <div className="flex items-center gap-2.5 p-2 rounded-xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500 via-orange-600 to-indigo-600 text-white text-[10px] font-extrabold flex items-center justify-center shadow-sm">
+                    AA
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                      Ayush Anupam
+                    </div>
+                    <div className="text-[9px] text-amber-700 dark:text-amber-400 font-medium">
+                      Lead Creator & AI Architect
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: Settings Shortcut */}
+              <div className="pt-1 border-t border-slate-200/80 dark:border-gray-800/80">
+                <Link
+                  href="/settings"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800/80 transition-colors"
+                >
+                  <span className="flex items-center gap-1.5 text-[11px]">
+                    <SettingsIcon className="w-3.5 h-3.5 text-slate-500" />
+                    Open System Settings
+                  </span>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
+                    &rarr;
+                  </span>
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
 
       </div>
     </header>

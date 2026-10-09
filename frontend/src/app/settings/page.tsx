@@ -41,6 +41,8 @@ export default function SettingsPage() {
   const network = useTrafficStore((s) => s.network);
   const setNetwork = useTrafficStore((s) => s.setNetwork);
   const wsConnected = useTrafficStore((s) => s.wsConnected);
+  const userName = useTrafficStore((s) => s.userName);
+  const setUserName = useTrafficStore((s) => s.setUserName);
 
   // Creator Info
   const creatorName = "Ayush Anupam";
@@ -48,6 +50,7 @@ export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
 
   // Preference states (stored in localStorage)
+  const [profileNameInput, setProfileNameInput] = useState(userName || "User");
   const [apiUrl, setApiUrl] = useState(API_BASE);
   const [soundAlerts, setSoundAlerts] = useState(true);
   const [autoReconnect, setAutoReconnect] = useState(true);
@@ -60,6 +63,11 @@ export default function SettingsPage() {
   const [pingStatus, setPingStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
   const [pingLatency, setPingLatency] = useState<number | null>(null);
   const [savedNotification, setSavedNotification] = useState(false);
+
+  // Keep profileNameInput in sync
+  useEffect(() => {
+    setProfileNameInput(userName || "User");
+  }, [userName]);
 
   // Load persisted preferences
   useEffect(() => {
@@ -97,7 +105,11 @@ export default function SettingsPage() {
   };
 
   const handleSavePreferences = () => {
+    const cleanUser = profileNameInput.trim() || "User";
+    setUserName(cleanUser);
+    setProfileNameInput(cleanUser);
     if (typeof window !== "undefined") {
+      localStorage.setItem("marg_user_name", cleanUser);
       localStorage.setItem("marg_api_url", apiUrl);
       localStorage.setItem("marg_sound_alerts", String(soundAlerts));
       localStorage.setItem("marg_tick_speed", String(tickSpeedMs));
@@ -117,7 +129,10 @@ export default function SettingsPage() {
     setHighDpi(true);
     setDensityOverlay(true);
     setApiUrl(API_BASE);
+    setUserName("User");
+    setProfileNameInput("User");
     if (typeof window !== "undefined") {
+      localStorage.setItem("marg_user_name", "User");
       localStorage.removeItem("marg_api_url");
       localStorage.removeItem("marg_sound_alerts");
       localStorage.removeItem("marg_tick_speed");
@@ -247,6 +262,81 @@ export default function SettingsPage() {
                 <Code2 className="w-3.5 h-3.5 text-indigo-500" />
                 <span>Full-Stack AI & Robotics</span>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* OPERATOR / USER PROFILE CARD (CUSTOMIZABLE) */}
+        <div className="rounded-3xl bg-white dark:bg-[#0c111c] border border-slate-200/90 dark:border-gray-800 p-6 md:p-7 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <User className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  Operator Profile
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    Customizable
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-gray-400">
+                  Set your custom operator name for live telemetry, simulation runs, and navigation (Default: &quot;User&quot;)
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs font-mono">
+              <span className="text-slate-400 dark:text-gray-500">Active:</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400">{userName || "User"}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div className="md:col-span-2 space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 dark:text-gray-300 block">
+                Your Display Name
+              </label>
+              <input
+                type="text"
+                value={profileNameInput}
+                onChange={(e) => setProfileNameInput(e.target.value)}
+                placeholder="Enter name (e.g. User, Traffic Officer)"
+                maxLength={30}
+                className="w-full px-3.5 py-2.5 text-xs font-medium rounded-xl bg-slate-50 dark:bg-gray-900/80 border border-slate-300 dark:border-gray-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors"
+              />
+              <p className="text-[11px] text-slate-500 dark:text-gray-400">
+                Any operator can change this to their preferred name anytime. Developer attribution remains permanently credited in the spotlight above.
+              </p>
+            </div>
+
+            <div className="flex items-end gap-2 pb-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  const clean = profileNameInput.trim() || "User";
+                  setUserName(clean);
+                  setProfileNameInput(clean);
+                  setSavedNotification(true);
+                  setTimeout(() => setSavedNotification(false), 2500);
+                }}
+                className="flex-1 px-4 py-2.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-500/20 transition-all flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <Check className="w-4 h-4" />
+                Apply Name
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUserName("User");
+                  setProfileNameInput("User");
+                  setSavedNotification(true);
+                  setTimeout(() => setSavedNotification(false), 2500);
+                }}
+                className="px-3.5 py-2.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 transition-all"
+                title="Reset name to default 'User'"
+              >
+                Reset
+              </button>
             </div>
           </div>
         </div>

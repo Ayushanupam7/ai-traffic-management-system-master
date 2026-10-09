@@ -69,6 +69,8 @@ interface TrafficStore {
   setThemeMode: (theme: "night" | "day" | "sunset") => void;
   setViewMode: (view: "3d" | "2d") => void;
   setLastStartedConfig: (cfg: Partial<SimulationConfig> | null) => void;
+  userName: string;
+  setUserName: (name: string) => void;
   reset: () => void;
 }
 
@@ -106,6 +108,15 @@ export const useTrafficStore = create<TrafficStore>((set) => ({
   themeMode: "night",
   viewMode: "3d",
   lastStartedConfig: null,
+  userName: "User",
+  setUserName: (userName: string) => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("marg_user_name", userName);
+      } catch {}
+    }
+    set({ userName });
+  },
 
   updateFromTick: (data) =>
     set((state) => ({
