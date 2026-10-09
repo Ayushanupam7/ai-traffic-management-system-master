@@ -71,6 +71,8 @@ interface TrafficStore {
   setLastStartedConfig: (cfg: Partial<SimulationConfig> | null) => void;
   userName: string;
   setUserName: (name: string) => void;
+  reachedEvNotification: { id: string; label: string; to: string; timestamp: number } | null;
+  setReachedEvNotification: (notif: { id: string; label: string; to: string; timestamp: number } | null) => void;
   reset: () => void;
 }
 
@@ -117,6 +119,8 @@ export const useTrafficStore = create<TrafficStore>((set) => ({
     }
     set({ userName });
   },
+  reachedEvNotification: null,
+  setReachedEvNotification: (reachedEvNotification) => set({ reachedEvNotification }),
 
   updateFromTick: (data) =>
     set((state) => ({

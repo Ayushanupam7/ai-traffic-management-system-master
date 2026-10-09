@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useTrafficStore } from "@/store/trafficStore";
 import StreetMap         from "@/components/Map/StreetMap";
@@ -23,6 +23,7 @@ import {
   Siren,
   Activity,
   Layers,
+  X,
 } from "lucide-react";
 
 type SidebarTab = "all" | "controls" | "emergency" | "metrics";
@@ -32,10 +33,22 @@ export default function Dashboard() {
   const selected = useTrafficStore((s) => s.selectedIntersection);
   const status = useTrafficStore((s) => s.status);
   const trackedEvId = useTrafficStore((s) => s.trackedEvId);
+  const reachedEvNotification = useTrafficStore((s) => s.reachedEvNotification);
+  const setReachedEvNotification = useTrafficStore((s) => s.setReachedEvNotification);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<SidebarTab>("all");
   const [timelineOpen, setTimelineOpen] = useState(false);
+
+  // Auto-dismiss reached toast after 7 seconds
+  useEffect(() => {
+    if (reachedEvNotification) {
+      const timer = setTimeout(() => {
+        setReachedEvNotification(null);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [reachedEvNotification, setReachedEvNotification]);
 
   const isRunning = status === "running" || status === "paused";
 
@@ -172,6 +185,30 @@ export default function Dashboard() {
 
       {/* Main Screen: 3D Visualization & Map Workspace */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Floating Vehicle Reached Destination Alert Toast */}
+        {reachedEvNotification && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-emerald-600/95 dark:bg-emerald-700/95 text-white shadow-2xl backdrop-blur-md border border-emerald-400/40 animate-in slide-in-from-top-4 fade-in duration-300 pointer-events-auto">
+            <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-sm shadow-inner flex-shrink-0">
+              🏁
+            </div>
+            <div className="flex flex-col text-left leading-tight">
+              <span className="text-xs font-black tracking-tight">
+                Dispatched Vehicle Reached Position!
+              </span>
+              <span className="text-[11px] text-emerald-100 font-medium">
+                {reachedEvNotification.label} has reached intersection <strong>{reachedEvNotification.to}</strong>.
+              </span>
+            </div>
+            <button
+              onClick={() => setReachedEvNotification(null)}
+              className="p-1 rounded-lg hover:bg-white/20 transition-colors text-emerald-100 hover:text-white"
+              title="Close notification"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         <div className="flex-1 relative overflow-hidden bg-slate-100 dark:bg-[#060a0f]">
           <StreetMap />
           {!selected && <CameraCarousel />}

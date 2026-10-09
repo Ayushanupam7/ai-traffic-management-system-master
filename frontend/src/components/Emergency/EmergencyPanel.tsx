@@ -9,7 +9,7 @@ const INTERSECTION_IDS = ["A0", "A1", "B0", "B1", "C0", "C1"] as const;
 const VEHICLE_TYPES = [
   { value: "ambulance", label: "🚑 Ambulance" },
   { value: "fire_truck", label: "🚒 Fire Truck" },
-  { value: "police",    label: "🚓 Police" },
+  { value: "police", label: "🚓 Police" },
 ] as const;
 
 interface ActiveEv {
@@ -19,18 +19,18 @@ interface ActiveEv {
 }
 
 export default function EmergencyPanel() {
-  const status          = useTrafficStore((s) => s.status);
-  const network         = useTrafficStore((s) => s.network);
+  const status = useTrafficStore((s) => s.status);
+  const network = useTrafficStore((s) => s.network);
   const setActiveEvRoutes = useTrafficStore((s) => s.setActiveEvRoutes);
-  const setTrackedEv    = useTrafficStore((s) => s.setTrackedEv);
-  const trackedEvId     = useTrafficStore((s) => s.trackedEvId);
+  const setTrackedEv = useTrafficStore((s) => s.setTrackedEv);
+  const trackedEvId = useTrafficStore((s) => s.trackedEvId);
 
-  const [from, setFrom]           = useState("A0");
-  const [to, setTo]               = useState("C1");
+  const [from, setFrom] = useState("A0");
+  const [to, setTo] = useState("C1");
   const [vehicleType, setVehicleType] = useState("ambulance");
-  const [loading, setLoading]     = useState(false);
+  const [loading, setLoading] = useState(false);
   const [activeEvs, setActiveEvs] = useState<ActiveEv[]>([]);
-  const [error, setError]         = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Keep route visualization in sync with active EVs
   useEffect(() => {
@@ -154,11 +154,10 @@ export default function EmergencyPanel() {
           <button
             key={vt.value}
             onClick={() => setVehicleType(vt.value)}
-            className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium border transition-colors ${
-              vehicleType === vt.value
+            className={`flex-1 py-1.5 rounded-lg text-[10px] font-medium border transition-colors ${vehicleType === vt.value
                 ? "bg-red-600 text-white border-red-500 shadow-sm shadow-red-500/25"
                 : "bg-slate-100 dark:bg-[#1f2937] border-slate-200 dark:border-gray-700/60 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-200"
-            }`}
+              }`}
           >
             {vt.label}
           </button>
@@ -191,11 +190,10 @@ export default function EmergencyPanel() {
             return (
               <div
                 key={ev.vehicle_id}
-                className={`flex items-center justify-between rounded-xl px-2.5 py-2 gap-2 border transition-all ${
-                  isTrackingThis
+                className={`flex items-center justify-between rounded-xl px-2.5 py-2 gap-2 border transition-all ${isTrackingThis
                     ? "bg-red-500/10 dark:bg-red-950/40 border-red-500/60 shadow-md shadow-red-500/15"
                     : "bg-slate-100/80 dark:bg-[#1f2937] border-slate-200 dark:border-gray-700/60"
-                }`}
+                  }`}
               >
                 <div className="flex flex-col flex-1 min-w-0">
                   <span className="text-[10px] font-bold text-slate-800 dark:text-gray-200 truncate">{ev.label}</span>
@@ -208,11 +206,10 @@ export default function EmergencyPanel() {
                   <button
                     onClick={() => setTrackedEv(isTrackingThis ? null : ev.vehicle_id, "chase")}
                     title={isTrackingThis ? "Exit Camera View" : "Attach Live 3D EV Camera"}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-all ${
-                      isTrackingThis
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-all ${isTrackingThis
                         ? "bg-red-600 border-red-500 text-white animate-pulse shadow-sm shadow-red-500/30"
                         : "bg-slate-200 dark:bg-gray-800 border-slate-300 dark:border-gray-600 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-white"
-                    }`}
+                      }`}
                   >
                     {isTrackingThis ? "🎥 Live" : "🎥 Cam"}
                   </button>
