@@ -73,6 +73,8 @@ interface TrafficStore {
   setUserName: (name: string) => void;
   reachedEvNotification: { id: string; label: string; to: string; timestamp: number } | null;
   setReachedEvNotification: (notif: { id: string; label: string; to: string; timestamp: number } | null) => void;
+  targetFps: number;
+  setTargetFps: (fps: number) => void;
   reset: () => void;
 }
 
@@ -121,6 +123,15 @@ export const useTrafficStore = create<TrafficStore>((set) => ({
   },
   reachedEvNotification: null,
   setReachedEvNotification: (reachedEvNotification) => set({ reachedEvNotification }),
+  targetFps: 60,
+  setTargetFps: (targetFps: number) => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("marg_target_fps", String(targetFps));
+      } catch {}
+    }
+    set({ targetFps });
+  },
 
   updateFromTick: (data) =>
     set((state) => ({

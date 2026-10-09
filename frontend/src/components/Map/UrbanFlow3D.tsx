@@ -775,13 +775,25 @@ export default function UrbanFlow3D() {
     evGroupRef.current = evGroup;
 
     // ──────────────────────────────────────────────────────────────────
-    // 60-FPS ANIMATION & CAMERA LOOP
+    // ANIMATION & CAMERA LOOP (HONORS TARGET FRAMERATE)
     // ──────────────────────────────────────────────────────────────────
     let animId: number;
+    let lastRenderTime = performance.now();
     const clock = new THREE.Clock();
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
+
+      const targetFps = useTrafficStore.getState().targetFps || 60;
+      const now = performance.now();
+      if (targetFps > 0 && targetFps < 120) {
+        const interval = 1000 / targetFps;
+        if (now - lastRenderTime < interval - 1.5) {
+          return;
+        }
+      }
+      lastRenderTime = now;
+
       const elapsed = clock.getElapsedTime();
 
       // DYNAMIC EV CAMERA TRACKING
@@ -828,7 +840,6 @@ export default function UrbanFlow3D() {
 
       // FPS calculation
       frameCountRef.current++;
-      const now = performance.now();
       if (now - lastTimeRef.current >= 1000) {
         setFps(Math.round((frameCountRef.current * 1000) / (now - lastTimeRef.current)));
         frameCountRef.current = 0;

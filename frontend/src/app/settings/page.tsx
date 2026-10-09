@@ -19,6 +19,7 @@ import {
   Cpu,
   Server,
   Sliders,
+  Gauge,
   Bell,
   Sparkles,
   ShieldCheck,
@@ -43,6 +44,8 @@ export default function SettingsPage() {
   const wsConnected = useTrafficStore((s) => s.wsConnected);
   const userName = useTrafficStore((s) => s.userName);
   const setUserName = useTrafficStore((s) => s.setUserName);
+  const targetFps = useTrafficStore((s) => s.targetFps);
+  const setTargetFps = useTrafficStore((s) => s.setTargetFps);
 
   // Creator Info
   const creatorName = "Ayush Anupam";
@@ -51,6 +54,7 @@ export default function SettingsPage() {
 
   // Preference states (stored in localStorage)
   const [profileNameInput, setProfileNameInput] = useState(userName || "User");
+  const [framerateInput, setFramerateInput] = useState(targetFps || 60);
   const [apiUrl, setApiUrl] = useState(API_BASE);
   const [soundAlerts, setSoundAlerts] = useState(true);
   const [autoReconnect, setAutoReconnect] = useState(true);
@@ -64,10 +68,14 @@ export default function SettingsPage() {
   const [pingLatency, setPingLatency] = useState<number | null>(null);
   const [savedNotification, setSavedNotification] = useState(false);
 
-  // Keep profileNameInput in sync
+  // Keep inputs in sync
   useEffect(() => {
     setProfileNameInput(userName || "User");
   }, [userName]);
+
+  useEffect(() => {
+    setFramerateInput(targetFps || 60);
+  }, [targetFps]);
 
   // Load persisted preferences
   useEffect(() => {
@@ -78,8 +86,13 @@ export default function SettingsPage() {
       if (storedSound !== null) setSoundAlerts(storedSound === "true");
       const storedTick = localStorage.getItem("marg_tick_speed");
       if (storedTick) setTickSpeedMs(Number(storedTick));
+      const storedFps = localStorage.getItem("marg_target_fps");
+      if (storedFps) {
+        setTargetFps(Number(storedFps));
+        setFramerateInput(Number(storedFps));
+      }
     }
-  }, []);
+  }, [setTargetFps]);
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(creatorEmail);
@@ -108,8 +121,10 @@ export default function SettingsPage() {
     const cleanUser = profileNameInput.trim() || "User";
     setUserName(cleanUser);
     setProfileNameInput(cleanUser);
+    setTargetFps(framerateInput);
     if (typeof window !== "undefined") {
       localStorage.setItem("marg_user_name", cleanUser);
+      localStorage.setItem("marg_target_fps", String(framerateInput));
       localStorage.setItem("marg_api_url", apiUrl);
       localStorage.setItem("marg_sound_alerts", String(soundAlerts));
       localStorage.setItem("marg_tick_speed", String(tickSpeedMs));
@@ -131,8 +146,11 @@ export default function SettingsPage() {
     setApiUrl(API_BASE);
     setUserName("User");
     setProfileNameInput("User");
+    setTargetFps(60);
+    setFramerateInput(60);
     if (typeof window !== "undefined") {
       localStorage.setItem("marg_user_name", "User");
+      localStorage.setItem("marg_target_fps", "60");
       localStorage.removeItem("marg_api_url");
       localStorage.removeItem("marg_sound_alerts");
       localStorage.removeItem("marg_tick_speed");
@@ -466,12 +484,12 @@ export default function SettingsPage() {
                 <Sliders className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">Simulation Defaults</h2>
-                <p className="text-xs text-slate-500 dark:text-gray-400">Default engine network topology and tick speed</p>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Simulation Defaults & Performance</h2>
+                <p className="text-xs text-slate-500 dark:text-gray-400">Network topology, target framerate (FPS), and engine tick speed</p>
               </div>
             </div>
 
-            <div className="space-y-4 pt-1">
+            <div className="space-y-5 pt-1">
               <div>
                 <label className="text-xs font-semibold text-slate-700 dark:text-gray-300 block mb-2">
                   Active Network Topology
@@ -491,6 +509,78 @@ export default function SettingsPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* TARGET SIMULATION FRAMERATE (FPS) CONTROL */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-gray-900/50 border border-slate-200/80 dark:border-gray-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Gauge className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 dark:text-gray-200 block">
+                        Target Framerate: {framerateInput} FPS
+                      </label>
+                      <span className="text-[10px] text-slate-500 dark:text-gray-400 font-mono">
+                        {(1000 / framerateInput).toFixed(1)}ms per frame
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    framerateInput <= 30
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                      : framerateInput <= 60
+                      ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30"
+                      : "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30"
+                  }`}>
+                    {framerateInput <= 30 ? "Eco (Low Battery)" : framerateInput <= 60 ? "Smooth (Standard)" : "High Refresh"}
+                  </span>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="grid grid-cols-4 gap-2">
+                  {[30, 60, 90, 120].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        setFramerateInput(preset);
+                        setTargetFps(preset);
+                      }}
+                      className={`py-1.5 px-2 rounded-xl border text-xs font-semibold transition-all ${
+                        framerateInput === preset
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/20"
+                          : "bg-white dark:bg-gray-800/80 border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {preset} FPS
+                    </button>
+                  ))}
+                </div>
+
+                {/* Framerate Slider */}
+                <input
+                  type="range"
+                  min="15"
+                  max="120"
+                  step="5"
+                  value={framerateInput}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setFramerateInput(val);
+                    setTargetFps(val);
+                  }}
+                  className="w-full accent-blue-600 cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-slate-400 dark:text-gray-500 font-mono">
+                  <span>15 FPS</span>
+                  <span>30 FPS</span>
+                  <span>60 FPS</span>
+                  <span>90 FPS</span>
+                  <span>120 FPS</span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-gray-400 leading-tight">
+                  Throttles 3D WebGL and 2D Tactical simulation visual rendering. Conserves GPU and laptop battery at lower FPS; maximizes smoothness at 60–120 FPS.
+                </p>
               </div>
 
               <div>
