@@ -1,6 +1,19 @@
-/** WebSocket client for real-time traffic data. */
+import { API_BASE } from "./api";
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws/traffic";
+function resolveWsUrl(): string {
+  if (process.env.NEXT_PUBLIC_WS_URL && process.env.NEXT_PUBLIC_WS_URL.trim()) {
+    return process.env.NEXT_PUBLIC_WS_URL.trim();
+  }
+  try {
+    const url = new URL(API_BASE);
+    const protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${url.host}/ws/traffic`;
+  } catch {
+    return "ws://localhost:8000/ws/traffic";
+  }
+}
+
+const WS_URL = resolveWsUrl();
 
 type MessageHandler = (data: unknown) => void;
 

@@ -1,6 +1,15 @@
 /** REST API client for the traffic management backend. */
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+function normalizeApiBase(url?: string): string {
+  if (!url || !url.trim()) return "http://localhost:8000/api";
+  let cleaned = url.trim().replace(/\/+$/, "");
+  if (!cleaned.endsWith("/api")) {
+    cleaned = `${cleaned}/api`;
+  }
+  return cleaned;
+}
+
+export const API_BASE = normalizeApiBase(process.env.NEXT_PUBLIC_API_URL);
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
