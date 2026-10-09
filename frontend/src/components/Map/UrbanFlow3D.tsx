@@ -145,11 +145,11 @@ export function getIntersectionAspects(inter: IntersectionState): IntersectionSi
   // Combined EW and NS
   const ew: SignalAspect =
     e === "green" || w === "green" ? "green" :
-      e === "yellow" || w === "yellow" ? "yellow" : "red";
+    e === "yellow" || w === "yellow" ? "yellow" : "red";
 
   const ns: SignalAspect =
     n === "green" || s === "green" ? "green" :
-      n === "yellow" || s === "yellow" ? "yellow" : "red";
+    n === "yellow" || s === "yellow" ? "yellow" : "red";
 
   return { N: n, E: e, S: s, W: w, EW: ew, NS: ns };
 }
@@ -211,76 +211,6 @@ export function applyAspectToHeadMats(
   }
 }
 
-export type VisualVehicleKind = "car" | "motorcycle" | "bus" | "truck" | "rickshaw";
-
-export interface AnimVehicle {
-  id: string;
-  kind: VisualVehicleKind;
-  isEv: boolean;
-  colorIdx: number;
-  currX: number;
-  currZ: number;
-  currRotY: number;
-  currPitch: number;
-  currRoll: number;
-  currSpeed: number;
-  targetX: number;
-  targetZ: number;
-  targetRotY: number;
-  targetSpeed: number;
-  lastSeenTime: number;
-}
-
-// Module-level pre-allocated color palettes for 60-FPS rendering
-const CAR_COLORS = [
-  new THREE.Color(0xf8fafc), // Pearl White Metallic
-  new THREE.Color(0x18181b), // Obsidian Black
-  new THREE.Color(0x334155), // Graphite Gray
-  new THREE.Color(0x94a3b8), // Nardo Silver Gray
-  new THREE.Color(0xb91c1c), // Crimson Red Metallic
-  new THREE.Color(0x881337), // Deep Velvet Burgundy
-  new THREE.Color(0x0284c7), // Electric Riviera Blue
-  new THREE.Color(0x1e3a8a), // Midnight Sapphire Blue
-  new THREE.Color(0x047857), // British Racing Green
-  new THREE.Color(0xd97706), // Tuscan Amber Gold
-  new THREE.Color(0x4f46e5), // Royal Indigo
-];
-
-const MOTO_COLORS = [
-  new THREE.Color(0x16a34a), // Kawasaki Lime Green
-  new THREE.Color(0xdc2626), // Ducati Racing Scarlet
-  new THREE.Color(0x2563eb), // Yamaha Racing Blue
-  new THREE.Color(0xea580c), // KTM Solar Orange
-  new THREE.Color(0x18181b), // Stealth Matte Black
-  new THREE.Color(0xf8fafc), // Pearl White
-  new THREE.Color(0xfacc15), // Cyber Neon Yellow
-];
-
-const BUS_COLORS = [
-  new THREE.Color(0x059669), // Rapid Emerald Transit
-  new THREE.Color(0x0284c7), // Metro Royal Cyan
-  new THREE.Color(0xbe123c), // Rapid Express Crimson
-  new THREE.Color(0xd97706), // Citylink Amber Gold
-  new THREE.Color(0x4338ca), // Intercity Indigo
-];
-
-const TRUCK_COLORS = [
-  new THREE.Color(0xf8fafc), // Arctic Logistics White
-  new THREE.Color(0x334155), // Freight Steel Slate
-  new THREE.Color(0x1e293b), // Maritime Deep Navy
-  new THREE.Color(0xb45309), // Industrial Desert Bronze
-  new THREE.Color(0x3f6212), // Cargo Forest Khaki
-  new THREE.Color(0x78716c), // Heavy Granite Stone
-];
-
-const RICKSHAW_COLORS = [
-  new THREE.Color(0x15803d), // Classic CNG Emerald Green (Yellow Canopy)
-  new THREE.Color(0x18181b), // Classic Jet Black (Yellow Canopy)
-  new THREE.Color(0x1e3a8a), // Royal Navy Auto (Yellow Canopy)
-  new THREE.Color(0x881337), // Crimson Maroon Auto (Yellow Canopy)
-  new THREE.Color(0x166534), // Forest Green Auto (Yellow Canopy)
-];
-
 export default function UrbanFlow3D() {
   const mountRef = useRef<HTMLDivElement>(null);
 
@@ -327,9 +257,6 @@ export default function UrbanFlow3D() {
     showEvCorridor: true,
   });
 
-  const settingsRef = useRef<VisualizerSettings>(settings);
-  settingsRef.current = settings;
-
   const [cameraPreset, setCameraPreset] = useState<CameraPreset>("perspective");
   const [evCamAngle, setEvCamAngle] = useState<EvCamAngle>("chase");
   const [isSirenMuted, setIsSirenMuted] = useState<boolean>(true);
@@ -337,10 +264,6 @@ export default function UrbanFlow3D() {
   const [showDrawer, setShowDrawer] = useState<boolean>(false);
   const [showJuncList, setShowJuncList] = useState<boolean>(false);
   const [fps, setFps] = useState<number>(60);
-
-  // 60-FPS Vehicle smoothing & physics animation map
-  const animVehiclesRef = useRef<Map<string, AnimVehicle>>(new Map());
-  const lastAnimFrameTimeRef = useRef<number>(performance.now());
 
   // 3D Refs
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -1579,184 +1502,6 @@ export default function UrbanFlow3D() {
       lastRenderTime = now;
 
       const elapsed = clock.getElapsedTime();
-      const dt = Math.min((now - (lastAnimFrameTimeRef.current || now)) / 1000, 0.1);
-      lastAnimFrameTimeRef.current = now;
-
-      // ──────────────────────────────────────────────────────────────────
-      // 60-FPS REALISTIC VEHICLE SMOOTHING, STEERING & SUSPENSION DYNAMICS
-      // ──────────────────────────────────────────────────────────────────
-      const animVehicles = animVehiclesRef.current;
-      const showVehicles = settingsRef.current.showVehicles;
-
-      if (showVehicles && animVehicles.size > 0) {
-        const dummy = dummyRef.current;
-        let carCount = 0;
-        let motoCount = 0;
-        let busCount = 0;
-        let truckCount = 0;
-        let rickshawCount = 0;
-        let evVehicle: AnimVehicle | null = null;
-
-        // Exponential smoothing rates (framerate-independent):
-        // 14.0 gives ~90% convergence in ~160ms, eliminating jerky snaps
-        // while tracking dynamic stop-and-go speeds with zero perceptible lag
-        const posFactor = dt > 0 ? 1.0 - Math.exp(-14.0 * dt) : 1.0;
-        const rotFactor = dt > 0 ? 1.0 - Math.exp(-12.0 * dt) : 1.0;
-        const speedFactor = dt > 0 ? 1.0 - Math.exp(-8.0 * dt) : 1.0;
-
-        animVehicles.forEach((veh, id) => {
-          // Prune stale vehicles after 2.5s of no updates from server
-          if (now - veh.lastSeenTime > 2500) {
-            animVehicles.delete(id);
-            return;
-          }
-
-          // 1. Smooth position interpolation
-          const dx = veh.targetX - veh.currX;
-          const dz = veh.targetZ - veh.currZ;
-          const distSq = dx * dx + dz * dz;
-
-          // If vehicle jumped massively (network wrap / respawn), snap instantly
-          if (distSq > 2500) {
-            veh.currX = veh.targetX;
-            veh.currZ = veh.targetZ;
-            veh.currRotY = veh.targetRotY;
-          } else {
-            veh.currX += dx * posFactor;
-            veh.currZ += dz * posFactor;
-
-            // 2. Shortest-path angular lerp for natural steering along curves
-            const rotDiff = Math.atan2(
-              Math.sin(veh.targetRotY - veh.currRotY),
-              Math.cos(veh.targetRotY - veh.currRotY)
-            );
-            veh.currRotY += rotDiff * rotFactor;
-          }
-
-          // 3. Dynamic speed & lifelike vehicle suspension physics
-          const prevSpeed = veh.currSpeed;
-          veh.currSpeed += (veh.targetSpeed - veh.currSpeed) * speedFactor;
-          const accel = veh.currSpeed - prevSpeed;
-
-          // Braking causes nose-down pitch; acceleration causes subtle squat
-          const targetPitch = THREE.MathUtils.clamp(-accel * 0.015, -0.04, 0.025);
-          veh.currPitch += (targetPitch - veh.currPitch) * (1.0 - Math.exp(-6.0 * dt));
-
-          // Steering causes gentle body roll lean into/away from turns
-          const rotDelta = Math.atan2(
-            Math.sin(veh.targetRotY - veh.currRotY),
-            Math.cos(veh.targetRotY - veh.currRotY)
-          );
-          const targetRoll = THREE.MathUtils.clamp(
-            -rotDelta * 0.08 * Math.min(veh.currSpeed / 8, 1.5),
-            -0.035,
-            0.035
-          );
-          veh.currRoll += (targetRoll - veh.currRoll) * (1.0 - Math.exp(-6.0 * dt));
-
-          if (veh.isEv) {
-            evVehicle = veh;
-          } else {
-            dummy.position.set(veh.currX, 0.08, veh.currZ);
-            dummy.rotation.set(veh.currPitch, veh.currRotY, veh.currRoll);
-            dummy.updateMatrix();
-
-            const cIdx = veh.colorIdx;
-            if (veh.kind === "car" && carCount < 1000) {
-              instancedCars?.setMatrixAt(carCount, dummy.matrix);
-              instancedCabins?.setMatrixAt(carCount, dummy.matrix);
-              instancedWheels?.setMatrixAt(carCount, dummy.matrix);
-              instancedHeadlights?.setMatrixAt(carCount, dummy.matrix);
-              instancedTaillights?.setMatrixAt(carCount, dummy.matrix);
-              instancedCars?.setColorAt(carCount, CAR_COLORS[cIdx % CAR_COLORS.length]);
-              carCount++;
-            } else if (veh.kind === "motorcycle" && motoCount < 500) {
-              instancedMotos?.setMatrixAt(motoCount, dummy.matrix);
-              instancedMotoWheels?.setMatrixAt(motoCount, dummy.matrix);
-              instancedMotos?.setColorAt(motoCount, MOTO_COLORS[cIdx % MOTO_COLORS.length]);
-              motoCount++;
-            } else if (veh.kind === "bus" && busCount < 300) {
-              instancedBuses?.setMatrixAt(busCount, dummy.matrix);
-              instancedBusGlass?.setMatrixAt(busCount, dummy.matrix);
-              instancedBusWheels?.setMatrixAt(busCount, dummy.matrix);
-              instancedBusSigns?.setMatrixAt(busCount, dummy.matrix);
-              instancedBuses?.setColorAt(busCount, BUS_COLORS[cIdx % BUS_COLORS.length]);
-              busCount++;
-            } else if (veh.kind === "truck" && truckCount < 300) {
-              instancedTruckCabs?.setMatrixAt(truckCount, dummy.matrix);
-              instancedTruckCargo?.setMatrixAt(truckCount, dummy.matrix);
-              instancedTruckWheels?.setMatrixAt(truckCount, dummy.matrix);
-              instancedTruckCabs?.setColorAt(truckCount, TRUCK_COLORS[cIdx % TRUCK_COLORS.length]);
-              instancedTruckCargo?.setColorAt(truckCount, TRUCK_COLORS[(cIdx + 2) % TRUCK_COLORS.length]);
-              truckCount++;
-            } else if (veh.kind === "rickshaw" && rickshawCount < 500) {
-              instancedRickshawBody?.setMatrixAt(rickshawCount, dummy.matrix);
-              instancedRickshawCanopy?.setMatrixAt(rickshawCount, dummy.matrix);
-              instancedRickshawWheels?.setMatrixAt(rickshawCount, dummy.matrix);
-              instancedRickshawBody?.setColorAt(rickshawCount, RICKSHAW_COLORS[cIdx % RICKSHAW_COLORS.length]);
-              rickshawCount++;
-            }
-          }
-        });
-
-        // Emergency vehicle actor update
-        if (evVehicle && evGroup) {
-          evGroup.visible = true;
-          evGroup.position.set(evVehicle.currX, 0.08, evVehicle.currZ);
-          evGroup.rotation.set(evVehicle.currPitch, evVehicle.currRotY, evVehicle.currRoll);
-          evStateRef.current = {
-            x: evVehicle.currX,
-            z: evVehicle.currZ,
-            rotY: evVehicle.currRotY,
-            speed: evVehicle.currSpeed,
-          };
-        } else if (evGroup) {
-          evGroup.visible = false;
-          evStateRef.current = null;
-        }
-
-        // Apply count & update GPU instance matrices
-        if (instancedCars) { instancedCars.count = carCount; instancedCars.instanceMatrix.needsUpdate = true; if (instancedCars.instanceColor) instancedCars.instanceColor.needsUpdate = true; }
-        if (instancedCabins) { instancedCabins.count = carCount; instancedCabins.instanceMatrix.needsUpdate = true; }
-        if (instancedWheels) { instancedWheels.count = carCount; instancedWheels.instanceMatrix.needsUpdate = true; }
-        if (instancedHeadlights) { instancedHeadlights.count = carCount; instancedHeadlights.instanceMatrix.needsUpdate = true; }
-        if (instancedTaillights) { instancedTaillights.count = carCount; instancedTaillights.instanceMatrix.needsUpdate = true; }
-
-        if (instancedMotos) { instancedMotos.count = motoCount; instancedMotos.instanceMatrix.needsUpdate = true; if (instancedMotos.instanceColor) instancedMotos.instanceColor.needsUpdate = true; }
-        if (instancedMotoWheels) { instancedMotoWheels.count = motoCount; instancedMotoWheels.instanceMatrix.needsUpdate = true; }
-
-        if (instancedBuses) { instancedBuses.count = busCount; instancedBuses.instanceMatrix.needsUpdate = true; if (instancedBuses.instanceColor) instancedBuses.instanceColor.needsUpdate = true; }
-        if (instancedBusGlass) { instancedBusGlass.count = busCount; instancedBusGlass.instanceMatrix.needsUpdate = true; }
-        if (instancedBusWheels) { instancedBusWheels.count = busCount; instancedBusWheels.instanceMatrix.needsUpdate = true; }
-        if (instancedBusSigns) { instancedBusSigns.count = busCount; instancedBusSigns.instanceMatrix.needsUpdate = true; }
-
-        if (instancedTruckCabs) { instancedTruckCabs.count = truckCount; instancedTruckCabs.instanceMatrix.needsUpdate = true; if (instancedTruckCabs.instanceColor) instancedTruckCabs.instanceColor.needsUpdate = true; }
-        if (instancedTruckCargo) { instancedTruckCargo.count = truckCount; instancedTruckCargo.instanceMatrix.needsUpdate = true; if (instancedTruckCargo.instanceColor) instancedTruckCargo.instanceColor.needsUpdate = true; }
-        if (instancedTruckWheels) { instancedTruckWheels.count = truckCount; instancedTruckWheels.instanceMatrix.needsUpdate = true; }
-
-        if (instancedRickshawBody) { instancedRickshawBody.count = rickshawCount; instancedRickshawBody.instanceMatrix.needsUpdate = true; if (instancedRickshawBody.instanceColor) instancedRickshawBody.instanceColor.needsUpdate = true; }
-        if (instancedRickshawCanopy) { instancedRickshawCanopy.count = rickshawCount; instancedRickshawCanopy.instanceMatrix.needsUpdate = true; }
-        if (instancedRickshawWheels) { instancedRickshawWheels.count = rickshawCount; instancedRickshawWheels.instanceMatrix.needsUpdate = true; }
-      } else {
-        if (instancedCars && instancedCars.count !== 0) { instancedCars.count = 0; instancedCars.instanceMatrix.needsUpdate = true; }
-        if (instancedCabins && instancedCabins.count !== 0) { instancedCabins.count = 0; instancedCabins.instanceMatrix.needsUpdate = true; }
-        if (instancedWheels && instancedWheels.count !== 0) { instancedWheels.count = 0; instancedWheels.instanceMatrix.needsUpdate = true; }
-        if (instancedHeadlights && instancedHeadlights.count !== 0) { instancedHeadlights.count = 0; instancedHeadlights.instanceMatrix.needsUpdate = true; }
-        if (instancedTaillights && instancedTaillights.count !== 0) { instancedTaillights.count = 0; instancedTaillights.instanceMatrix.needsUpdate = true; }
-        if (instancedMotos && instancedMotos.count !== 0) { instancedMotos.count = 0; instancedMotos.instanceMatrix.needsUpdate = true; }
-        if (instancedMotoWheels && instancedMotoWheels.count !== 0) { instancedMotoWheels.count = 0; instancedMotoWheels.instanceMatrix.needsUpdate = true; }
-        if (instancedBuses && instancedBuses.count !== 0) { instancedBuses.count = 0; instancedBuses.instanceMatrix.needsUpdate = true; }
-        if (instancedBusGlass && instancedBusGlass.count !== 0) { instancedBusGlass.count = 0; instancedBusGlass.instanceMatrix.needsUpdate = true; }
-        if (instancedBusWheels && instancedBusWheels.count !== 0) { instancedBusWheels.count = 0; instancedBusWheels.instanceMatrix.needsUpdate = true; }
-        if (instancedBusSigns && instancedBusSigns.count !== 0) { instancedBusSigns.count = 0; instancedBusSigns.instanceMatrix.needsUpdate = true; }
-        if (instancedTruckCabs && instancedTruckCabs.count !== 0) { instancedTruckCabs.count = 0; instancedTruckCabs.instanceMatrix.needsUpdate = true; }
-        if (instancedTruckCargo && instancedTruckCargo.count !== 0) { instancedTruckCargo.count = 0; instancedTruckCargo.instanceMatrix.needsUpdate = true; }
-        if (instancedTruckWheels && instancedTruckWheels.count !== 0) { instancedTruckWheels.count = 0; instancedTruckWheels.instanceMatrix.needsUpdate = true; }
-        if (instancedRickshawBody && instancedRickshawBody.count !== 0) { instancedRickshawBody.count = 0; instancedRickshawBody.instanceMatrix.needsUpdate = true; }
-        if (instancedRickshawCanopy && instancedRickshawCanopy.count !== 0) { instancedRickshawCanopy.count = 0; instancedRickshawCanopy.instanceMatrix.needsUpdate = true; }
-        if (instancedRickshawWheels && instancedRickshawWheels.count !== 0) { instancedRickshawWheels.count = 0; instancedRickshawWheels.instanceMatrix.needsUpdate = true; }
-        if (evGroup && evGroup.visible) { evGroup.visible = false; evStateRef.current = null; }
-      }
 
       // DYNAMIC EV CAMERA TRACKING
       const evState = evStateRef.current;
@@ -1898,13 +1643,96 @@ export default function UrbanFlow3D() {
   // 1. Car  2. Motorcycle  3. Bus  4. Truck  5. Auto-rickshaw
   // ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const prevMap = prevVehiclePosRef.current;
+    const instancedCars = instancedCarsRef.current;
+    const instancedCabins = instancedCabinsRef.current;
+    const instancedWheels = instancedWheelsRef.current;
+    const instancedHeadlights = instancedHeadlightsRef.current;
+    const instancedTaillights = instancedTaillightsRef.current;
 
-    if (!vehicles || vehicles.length === 0) return;
+    const instancedMotos = instancedMotosRef.current;
+    const instancedMotoWheels = instancedMotoWheelsRef.current;
+
+    const instancedBuses = instancedBusesRef.current;
+    const instancedBusGlass = instancedBusGlassRef.current;
+    const instancedBusWheels = instancedBusWheelsRef.current;
+    const instancedBusSigns = instancedBusSignsRef.current;
+
+    const instancedTruckCabs = instancedTruckCabsRef.current;
+    const instancedTruckCargo = instancedTruckCargoRef.current;
+    const instancedTruckWheels = instancedTruckWheelsRef.current;
+
+    const instancedRickshawBody = instancedRickshawBodyRef.current;
+    const instancedRickshawCanopy = instancedRickshawCanopyRef.current;
+    const instancedRickshawWheels = instancedRickshawWheelsRef.current;
+
+    const dummy = dummyRef.current;
+    const prevMap = prevVehiclePosRef.current;
+    const evGroup = evGroupRef.current;
+
+    if (!instancedCars || !vehicles) return;
+
+    let foundEv: VehicleState | null = null;
+
+    // Palettes for each distinct vehicle type
+    // 1. Cars (sleek metallic automotive finishes)
+    const carColors = [
+      new THREE.Color(0xf8fafc), // Pearl White Metallic
+      new THREE.Color(0x18181b), // Obsidian Black
+      new THREE.Color(0x334155), // Graphite Gray
+      new THREE.Color(0x94a3b8), // Nardo Silver Gray
+      new THREE.Color(0xb91c1c), // Crimson Red Metallic
+      new THREE.Color(0x881337), // Deep Velvet Burgundy
+      new THREE.Color(0x0284c7), // Electric Riviera Blue
+      new THREE.Color(0x1e3a8a), // Midnight Sapphire Blue
+      new THREE.Color(0x047857), // British Racing Green
+      new THREE.Color(0xd97706), // Tuscan Amber Gold
+      new THREE.Color(0x4f46e5), // Royal Indigo
+    ];
+
+    // 2. Motorcycles (vibrant sport finishes)
+    const motoColors = [
+      new THREE.Color(0x16a34a), // Kawasaki Lime Green
+      new THREE.Color(0xdc2626), // Ducati Racing Scarlet
+      new THREE.Color(0x2563eb), // Yamaha Racing Blue
+      new THREE.Color(0xea580c), // KTM Solar Orange
+      new THREE.Color(0x18181b), // Stealth Matte Black
+      new THREE.Color(0xf8fafc), // Pearl White
+      new THREE.Color(0xfacc15), // Cyber Neon Yellow
+    ];
+
+    // 3. Buses (public transit fleet liveries)
+    const busColors = [
+      new THREE.Color(0x059669), // Rapid Emerald Transit
+      new THREE.Color(0x0284c7), // Metro Royal Cyan
+      new THREE.Color(0xbe123c), // Rapid Express Crimson
+      new THREE.Color(0xd97706), // Citylink Amber Gold
+      new THREE.Color(0x4338ca), // Intercity Indigo
+    ];
+
+    // 4. Trucks (industrial freight fleet finishes)
+    const truckColors = [
+      new THREE.Color(0xf8fafc), // Arctic Logistics White
+      new THREE.Color(0x334155), // Freight Steel Slate
+      new THREE.Color(0x1e293b), // Maritime Deep Navy
+      new THREE.Color(0xb45309), // Industrial Desert Bronze
+      new THREE.Color(0x3f6212), // Cargo Forest Khaki
+      new THREE.Color(0x78716c), // Heavy Granite Stone
+    ];
+
+    // 5. Auto-rickshaws (iconic 3-wheeler liveries with golden-yellow canopy)
+    const rickshawColors = [
+      new THREE.Color(0x15803d), // Classic CNG Emerald Green (Yellow Canopy)
+      new THREE.Color(0x18181b), // Classic Jet Black (Yellow Canopy)
+      new THREE.Color(0x1e3a8a), // Royal Navy Auto (Yellow Canopy)
+      new THREE.Color(0x881337), // Crimson Maroon Auto (Yellow Canopy)
+      new THREE.Color(0x166534), // Forest Green Auto (Yellow Canopy)
+    ];
 
     // ──────────────────────────────────────────────────────────────────
     // 1. CLASSIFY ROAD, DIRECTION, LANES & VEHICLE KIND
     // ──────────────────────────────────────────────────────────────────
+    type VisualVehicleKind = "car" | "motorcycle" | "bus" | "truck" | "rickshaw";
+
     interface VehicleCandidate {
       v: VehicleState;
       id: string;
@@ -2449,48 +2277,161 @@ export default function UrbanFlow3D() {
     }
 
     // ──────────────────────────────────────────────────────────────────
-    // 6. UPDATE 60-FPS ANIMATION CACHE (TARGET POSITIONS & VELOCITIES)
+    // 6. RENDER 5 VEHICLE TYPES TO INSTANCED MESHES (60 FPS)
     // ──────────────────────────────────────────────────────────────────
-    const animMap = animVehiclesRef.current;
-    const now = performance.now();
+    let carCount = 0;
+    let motoCount = 0;
+    let busCount = 0;
+    let truckCount = 0;
+    let rickshawCount = 0;
 
     for (let i = 0; i < candidates.length; i++) {
-      const c = candidates[i];
-      let hash = 0;
-      for (let ch = 0; ch < c.id.length; ch++) hash = ((hash << 5) - hash + c.id.charCodeAt(ch)) | 0;
-      const colorIdx = Math.abs(hash);
+      const { v, id, isEv, kind, tx, tz, rotY } = candidates[i];
 
-      const existing = animMap.get(c.id);
-      if (existing) {
-        existing.targetX = c.tx;
-        existing.targetZ = c.tz;
-        existing.targetRotY = c.rotY;
-        existing.targetSpeed = c.v.speed;
-        existing.kind = c.kind;
-        existing.isEv = c.isEv;
-        existing.colorIdx = colorIdx;
-        existing.lastSeenTime = now;
-      } else {
-        animMap.set(c.id, {
-          id: c.id,
-          kind: c.kind,
-          isEv: c.isEv,
-          colorIdx,
-          currX: c.tx,
-          currZ: c.tz,
-          currRotY: c.rotY,
-          currPitch: 0,
-          currRoll: 0,
-          currSpeed: c.v.speed,
-          targetX: c.tx,
-          targetZ: c.tz,
-          targetRotY: c.rotY,
-          targetSpeed: c.v.speed,
-          lastSeenTime: now,
-        });
+      if (isEv) {
+        foundEv = v;
+        if (evGroup) {
+          evGroup.visible = true;
+          evGroup.position.set(tx, 0.08, tz);
+          evGroup.rotation.y = rotY;
+          evStateRef.current = { x: tx, z: tz, rotY, speed: v.speed };
+        }
+      } else if (settings.showVehicles) {
+        dummy.position.set(tx, 0.08, tz);
+        dummy.rotation.set(0, rotY, 0);
+        dummy.updateMatrix();
+
+        let hash = 0;
+        for (let c = 0; c < id.length; c++) hash = ((hash << 5) - hash + id.charCodeAt(c)) | 0;
+        const colorIdx = Math.abs(hash);
+
+        if (kind === "car" && carCount < 1000) {
+          instancedCars?.setMatrixAt(carCount, dummy.matrix);
+          instancedCabins?.setMatrixAt(carCount, dummy.matrix);
+          instancedWheels?.setMatrixAt(carCount, dummy.matrix);
+          instancedHeadlights?.setMatrixAt(carCount, dummy.matrix);
+          instancedTaillights?.setMatrixAt(carCount, dummy.matrix);
+          instancedCars?.setColorAt(carCount, carColors[colorIdx % carColors.length]);
+          carCount++;
+        } else if (kind === "motorcycle" && motoCount < 500) {
+          instancedMotos?.setMatrixAt(motoCount, dummy.matrix);
+          instancedMotoWheels?.setMatrixAt(motoCount, dummy.matrix);
+          instancedMotos?.setColorAt(motoCount, motoColors[colorIdx % motoColors.length]);
+          motoCount++;
+        } else if (kind === "bus" && busCount < 300) {
+          instancedBuses?.setMatrixAt(busCount, dummy.matrix);
+          instancedBusGlass?.setMatrixAt(busCount, dummy.matrix);
+          instancedBusWheels?.setMatrixAt(busCount, dummy.matrix);
+          instancedBusSigns?.setMatrixAt(busCount, dummy.matrix);
+          instancedBuses?.setColorAt(busCount, busColors[colorIdx % busColors.length]);
+          busCount++;
+        } else if (kind === "truck" && truckCount < 300) {
+          instancedTruckCabs?.setMatrixAt(truckCount, dummy.matrix);
+          instancedTruckCargo?.setMatrixAt(truckCount, dummy.matrix);
+          instancedTruckWheels?.setMatrixAt(truckCount, dummy.matrix);
+          instancedTruckCabs?.setColorAt(truckCount, truckColors[colorIdx % truckColors.length]);
+          instancedTruckCargo?.setColorAt(truckCount, truckColors[(colorIdx + 2) % truckColors.length]);
+          truckCount++;
+        } else if (kind === "rickshaw" && rickshawCount < 500) {
+          instancedRickshawBody?.setMatrixAt(rickshawCount, dummy.matrix);
+          instancedRickshawCanopy?.setMatrixAt(rickshawCount, dummy.matrix);
+          instancedRickshawWheels?.setMatrixAt(rickshawCount, dummy.matrix);
+          instancedRickshawBody?.setColorAt(rickshawCount, rickshawColors[colorIdx % rickshawColors.length]);
+          rickshawCount++;
+        }
       }
     }
-  }, [vehicles, intersections]);
+
+    if (!foundEv && evGroup) {
+      evGroup.visible = false;
+      evStateRef.current = null;
+    }
+
+    // Update Counts & Buffer Flags across all 5 vehicle groups
+    // 1. Cars
+    if (instancedCars) {
+      instancedCars.count = carCount;
+      instancedCars.instanceMatrix.needsUpdate = true;
+      if (instancedCars.instanceColor) instancedCars.instanceColor.needsUpdate = true;
+    }
+    if (instancedCabins) {
+      instancedCabins.count = carCount;
+      instancedCabins.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedWheels) {
+      instancedWheels.count = carCount;
+      instancedWheels.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedHeadlights) {
+      instancedHeadlights.count = carCount;
+      instancedHeadlights.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedTaillights) {
+      instancedTaillights.count = carCount;
+      instancedTaillights.instanceMatrix.needsUpdate = true;
+    }
+
+    // 2. Motorcycles
+    if (instancedMotos) {
+      instancedMotos.count = motoCount;
+      instancedMotos.instanceMatrix.needsUpdate = true;
+      if (instancedMotos.instanceColor) instancedMotos.instanceColor.needsUpdate = true;
+    }
+    if (instancedMotoWheels) {
+      instancedMotoWheels.count = motoCount;
+      instancedMotoWheels.instanceMatrix.needsUpdate = true;
+    }
+
+    // 3. Buses
+    if (instancedBuses) {
+      instancedBuses.count = busCount;
+      instancedBuses.instanceMatrix.needsUpdate = true;
+      if (instancedBuses.instanceColor) instancedBuses.instanceColor.needsUpdate = true;
+    }
+    if (instancedBusGlass) {
+      instancedBusGlass.count = busCount;
+      instancedBusGlass.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedBusWheels) {
+      instancedBusWheels.count = busCount;
+      instancedBusWheels.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedBusSigns) {
+      instancedBusSigns.count = busCount;
+      instancedBusSigns.instanceMatrix.needsUpdate = true;
+    }
+
+    // 4. Trucks
+    if (instancedTruckCabs) {
+      instancedTruckCabs.count = truckCount;
+      instancedTruckCabs.instanceMatrix.needsUpdate = true;
+      if (instancedTruckCabs.instanceColor) instancedTruckCabs.instanceColor.needsUpdate = true;
+    }
+    if (instancedTruckCargo) {
+      instancedTruckCargo.count = truckCount;
+      instancedTruckCargo.instanceMatrix.needsUpdate = true;
+      if (instancedTruckCargo.instanceColor) instancedTruckCargo.instanceColor.needsUpdate = true;
+    }
+    if (instancedTruckWheels) {
+      instancedTruckWheels.count = truckCount;
+      instancedTruckWheels.instanceMatrix.needsUpdate = true;
+    }
+
+    // 5. Auto-rickshaws
+    if (instancedRickshawBody) {
+      instancedRickshawBody.count = rickshawCount;
+      instancedRickshawBody.instanceMatrix.needsUpdate = true;
+      if (instancedRickshawBody.instanceColor) instancedRickshawBody.instanceColor.needsUpdate = true;
+    }
+    if (instancedRickshawCanopy) {
+      instancedRickshawCanopy.count = rickshawCount;
+      instancedRickshawCanopy.instanceMatrix.needsUpdate = true;
+    }
+    if (instancedRickshawWheels) {
+      instancedRickshawWheels.count = rickshawCount;
+      instancedRickshawWheels.instanceMatrix.needsUpdate = true;
+    }
+  }, [vehicles, settings.showVehicles, intersections]);
 
   // ──────────────────────────────────────────────────────────────────
   // UPDATE REALISTIC TRAFFIC LIGHT HEADS & DYNAMIC STOP BARS
@@ -2744,8 +2685,9 @@ export default function UrbanFlow3D() {
       {/* TOP-RIGHT DIRECT INTERSECTION SELECTOR PILLS (Clickable easily, hidden when 0, shown when module runs) */}
       {intersections.length > 0 && (
         <div
-          className={`absolute z-50 transition-all duration-300 flex items-center gap-1.5 p-1 rounded-2xl bg-white/95 dark:bg-[#090d16]/90 border border-slate-200 dark:border-gray-800 backdrop-blur-md shadow-xl text-xs pointer-events-auto select-none ${isEvCamActive ? "top-16" : "top-3"
-            } ${selectedIntersection ? "right-4 sm:right-[420px] max-w-[calc(100vw-440px)] overflow-x-auto" : "right-4"}`}
+          className={`absolute z-50 transition-all duration-300 flex items-center gap-1.5 p-1 rounded-2xl bg-white/95 dark:bg-[#090d16]/90 border border-slate-200 dark:border-gray-800 backdrop-blur-md shadow-xl text-xs pointer-events-auto select-none ${
+            isEvCamActive ? "top-16" : "top-3"
+          } ${selectedIntersection ? "right-4 sm:right-[420px] max-w-[calc(100vw-440px)] overflow-x-auto" : "right-4"}`}
         >
           <div className="flex items-center gap-1 px-2 text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
             <Radio className="w-3 h-3 text-blue-500 animate-pulse" />
@@ -2773,22 +2715,25 @@ export default function UrbanFlow3D() {
                     focusIntersection(id);
                   }
                 }}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-mono font-bold transition-all border cursor-pointer active:scale-95 pointer-events-auto ${isSelected
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-mono font-bold transition-all border cursor-pointer active:scale-95 pointer-events-auto ${
+                  isSelected
                     ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 scale-105"
                     : "bg-slate-100 dark:bg-gray-800/80 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200 border-slate-200 dark:border-gray-700 hover:border-blue-400"
-                  }`}
+                }`}
                 title={`Junction ${id} (Queued: ${q}) — Click to locate on 3D map & inspect`}
               >
                 <span
-                  className={`w-2 h-2 rounded-full ${isGreen ? "bg-emerald-500 shadow-[0_0_6px_#10b981]" : "bg-red-500 shadow-[0_0_6px_#ef4444]"
-                    }`}
+                  className={`w-2 h-2 rounded-full ${
+                    isGreen ? "bg-emerald-500 shadow-[0_0_6px_#10b981]" : "bg-red-500 shadow-[0_0_6px_#ef4444]"
+                  }`}
                 />
                 <span>{id}</span>
                 <span
-                  className={`text-[10px] px-1 py-0.2 rounded font-mono ${isSelected
+                  className={`text-[10px] px-1 py-0.2 rounded font-mono ${
+                    isSelected
                       ? "bg-blue-700 text-white"
                       : "bg-slate-200 dark:bg-gray-700 text-slate-600 dark:text-gray-300"
-                    }`}
+                  }`}
                 >
                   {q}
                 </span>

@@ -490,9 +490,8 @@ def _build_route_xml(total_vehicles: int, duration_s: int, seed: int,
         # their defaults. Only lcKeepRight is overridden: at default 1.0
         # everyone drifts back to lane 0 of the 4-lane segments, undoing
         # the round-robin depart spread.
-        '    <vType id="car" accel="2.6" decel="4.0" apparentDecel="4.0" emergencyDecel="6.5" '
-        'sigma="0.08" tau="1.1" length="5" minGap="2.5" maxSpeed="27.78" actionStepLength="0.2" '
-        'lcStrategic="1.0" lcCooperative="1.0" lcSpeedGain="0.8" lcKeepRight="0" lcAccelLat="0.6" speedDev="0.08"/>',
+        '    <vType id="car" accel="1.3" decel="2.25" sigma="0.5" '
+        'length="5" minGap="2.5" maxSpeed="27.78" lcKeepRight="0"/>',
     ]
     for name, edges in ROUTES:
         lines.append(f'    <route id="{name}" edges="{edges}"/>')

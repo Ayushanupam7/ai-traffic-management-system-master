@@ -180,13 +180,11 @@ function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boo
       {vehicles.map((v) => {
         const { x, y } = vehicleToSvg(v);
         const isEv = String(v.type) === "emergency" || v.id.toLowerCase().includes("emergency");
-        const smoothStyle: React.CSSProperties = { transition: "cx 120ms linear, cy 120ms linear" };
-
         if (isEv) {
           return (
             <g key={v.id}>
               {/* Emergency Beacon Glow */}
-              <circle cx={x} cy={y} r={8} fill="#ef4444" fillOpacity={0.25} style={smoothStyle} />
+              <circle cx={x} cy={y} r={8} fill="#ef4444" fillOpacity={0.25} />
               <circle
                 cx={x}
                 cy={y}
@@ -195,7 +193,6 @@ function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boo
                 stroke="#ef4444"
                 strokeWidth={1.5}
                 strokeDasharray="4 2"
-                style={smoothStyle}
               />
               <circle
                 cx={x}
@@ -204,9 +201,8 @@ function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boo
                 fill="#dc2626"
                 stroke="#ffffff"
                 strokeWidth={1.2}
-                style={smoothStyle}
               />
-              <circle cx={x} cy={y} r={1.5} fill="#ffffff" style={smoothStyle} />
+              <circle cx={x} cy={y} r={1.5} fill="#ffffff" />
             </g>
           );
         }
@@ -223,7 +219,6 @@ function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boo
               stroke={isDay ? "#ffffff" : "#064e3b"}
               strokeWidth={0.8}
               fillOpacity={0.95}
-              style={smoothStyle}
             />
           );
         }
@@ -238,7 +233,6 @@ function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boo
                 stroke="#fbbf24"
                 strokeWidth={1.3}
                 fillOpacity={0.95}
-                style={smoothStyle}
               />
             </g>
           );
@@ -254,7 +248,6 @@ function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boo
               stroke={isDay ? "#ffffff" : "#451a03"}
               strokeWidth={1.0}
               fillOpacity={0.95}
-              style={smoothStyle}
             />
           );
         }
@@ -269,7 +262,6 @@ function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boo
               stroke={isDay ? "#ffffff" : "#1e293b"}
               strokeWidth={1.0}
               fillOpacity={0.95}
-              style={smoothStyle}
             />
           );
         }
@@ -285,7 +277,6 @@ function VehicleDots({ vehicles, isDay }: { vehicles: VehicleState[]; isDay: boo
             stroke={isDay ? "#ffffff" : "#0f172a"}
             strokeWidth={0.8}
             fillOpacity={0.95}
-            style={smoothStyle}
           />
         );
       })}
