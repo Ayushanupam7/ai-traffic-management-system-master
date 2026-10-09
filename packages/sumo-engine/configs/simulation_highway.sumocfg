@@ -2,8 +2,8 @@
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
     <input>
-        <net-file value="..\networks\highway.net.xml"/>
-        <route-files value="..\networks\highway.rou.xml"/>
+        <net-file value="../networks/highway.net.xml"/>
+        <route-files value="../networks/highway.rou.xml"/>
     </input>
     <time>
         <begin value="0"/>
