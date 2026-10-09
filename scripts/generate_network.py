@@ -428,8 +428,8 @@ def generate_demand_profiles(
 
 def _write_sumocfg(config_file: Path, route_file_name: str, end_time: int = 7200) -> None:
     """Write a .sumocfg pointing to the arterial network + given route file."""
-    net_path = os.path.relpath(NETWORK_DIR / "arterial.net.xml", CONFIG_DIR)
-    route_path = os.path.relpath(NETWORK_DIR / route_file_name, CONFIG_DIR)
+    net_path = os.path.relpath(NETWORK_DIR / "arterial.net.xml", CONFIG_DIR).replace("\\", "/")
+    route_path = os.path.relpath(NETWORK_DIR / route_file_name, CONFIG_DIR).replace("\\", "/")
 
     config_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

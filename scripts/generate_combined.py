@@ -483,8 +483,8 @@ def generate_demand(total_vehicles: int = 4000, duration_s: int = 3600,
 # --------------------------------------------------------------------- #
 
 def _write_sumocfg(config_file: Path, route_file_name: str, end_time: int = 7200) -> None:
-    net_path = os.path.relpath(NETWORK_DIR / "combined.net.xml", CONFIG_DIR)
-    route_path = os.path.relpath(NETWORK_DIR / route_file_name, CONFIG_DIR)
+    net_path = os.path.relpath(NETWORK_DIR / "combined.net.xml", CONFIG_DIR).replace("\\", "/")
+    route_path = os.path.relpath(NETWORK_DIR / route_file_name, CONFIG_DIR).replace("\\", "/")
     config_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">

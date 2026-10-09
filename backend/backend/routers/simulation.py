@@ -20,8 +20,13 @@ async def start_simulation(config: Optional[SimulationConfig] = None):
         raise HTTPException(400, "Simulation already running. Stop it first.")
 
     cfg = config or SimulationConfig()
-    await sim_manager.start(cfg)
-    return sim_manager.get_info()
+    try:
+        await sim_manager.start(cfg)
+        return sim_manager.get_info()
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").exception("Failed to start simulation: %s", e)
+        raise HTTPException(500, f"Failed to start simulation: {str(e)}")
 
 
 @router.post("/stop", response_model=SimulationInfo)

@@ -74,6 +74,17 @@ app.include_router(chat.router)
 app.include_router(ws_router)
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc: Exception):
+    import logging
+    from fastapi.responses import JSONResponse
+    logging.getLogger("uvicorn.error").exception("Unhandled server error: %s", exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal server error: {str(exc)}"},
+    )
+
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "service": "traffic-management-system"}
