@@ -442,8 +442,9 @@ def _build_route_xml(total_vehicles: int, duration_s: int, seed: int) -> str:
         '<?xml version="1.0" encoding="UTF-8"?>',
         f'<!-- Combined corridor demand: {total_vehicles} vehicles over {duration_s}s -->',
         '<routes>',
-        '    <vType id="car" accel="1.3" decel="2.25" sigma="0.5" '
-        'length="5" minGap="2.5" maxSpeed="27.78" lcKeepRight="0"/>',
+        '    <vType id="car" accel="2.6" decel="4.0" apparentDecel="4.0" emergencyDecel="6.5" '
+        'sigma="0.08" tau="1.1" length="5" minGap="2.5" maxSpeed="27.78" actionStepLength="0.2" '
+        'lcStrategic="1.0" lcCooperative="1.0" lcSpeedGain="0.8" lcKeepRight="0" lcAccelLat="0.6" speedDev="0.08"/>',
     ]
     for name, edges in ROUTES.items():
         lines.append(f'    <route id="{name}" edges="{edges}"/>')

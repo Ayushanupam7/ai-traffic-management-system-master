@@ -85,8 +85,8 @@ def _write_nodes(path: Path) -> None:
 def _write_types(path: Path) -> None:
     """Write edge type definitions."""
     root = ET.Element("types")
-    ET.SubElement(root, "type", id="arterial", numLanes="3", speed="5.56")  # 20 km/h
-    ET.SubElement(root, "type", id="cross", numLanes="2", speed="3.61")    # 13 km/h
+    ET.SubElement(root, "type", id="arterial", numLanes="3", speed="13.89")  # 50 km/h (realistic urban arterial)
+    ET.SubElement(root, "type", id="cross", numLanes="2", speed="11.11")    # 40 km/h (realistic cross street)
     tree = ET.ElementTree(root)
     ET.indent(tree)
     tree.write(path, encoding="UTF-8", xml_declaration=True)
@@ -364,11 +364,11 @@ def _build_route_xml(
         '<?xml version="1.0" encoding="UTF-8"?>',
         f'<!-- Demand profile: {profile_name} | {total_vehicles} vehicles over {duration_s}s -->',
         '<routes>',
-        '    <vType id="car" accel="1.5" decel="3.0" sigma="0.5" length="4.8" minGap="2.5" maxSpeed="15.0" vClass="passenger"/>',
-        '    <vType id="motorcycle" accel="2.4" decel="3.5" sigma="0.5" length="2.2" minGap="1.2" maxSpeed="16.0" vClass="motorcycle"/>',
-        '    <vType id="bus" accel="0.9" decel="2.0" sigma="0.3" length="10.5" minGap="3.0" maxSpeed="11.0" vClass="bus"/>',
-        '    <vType id="truck" accel="0.8" decel="1.8" sigma="0.3" length="8.5" minGap="3.0" maxSpeed="10.0" vClass="truck"/>',
-        '    <vType id="autorickshaw" accel="1.2" decel="2.2" sigma="0.5" length="2.8" minGap="1.5" maxSpeed="10.0" vClass="passenger"/>',
+        '    <vType id="car" accel="2.6" decel="4.0" apparentDecel="4.0" emergencyDecel="6.5" sigma="0.08" tau="1.1" length="4.8" minGap="2.0" maxSpeed="15.0" actionStepLength="0.2" lcStrategic="1.0" lcCooperative="1.0" lcSpeedGain="0.8" lcKeepRight="0" lcAccelLat="0.6" speedDev="0.08" vClass="passenger"/>',
+        '    <vType id="motorcycle" accel="3.2" decel="4.5" apparentDecel="4.5" emergencyDecel="7.0" sigma="0.08" tau="0.9" length="2.2" minGap="1.0" maxSpeed="16.0" actionStepLength="0.2" lcStrategic="1.0" lcCooperative="1.0" lcSpeedGain="1.0" lcKeepRight="0" lcAccelLat="0.9" speedDev="0.10" vClass="motorcycle"/>',
+        '    <vType id="bus" accel="1.4" decel="3.0" apparentDecel="3.0" emergencyDecel="5.0" sigma="0.04" tau="1.3" length="10.5" minGap="2.8" maxSpeed="12.0" actionStepLength="0.2" lcStrategic="1.0" lcCooperative="1.0" lcSpeedGain="0.5" lcKeepRight="0" lcAccelLat="0.4" speedDev="0.05" vClass="bus"/>',
+        '    <vType id="truck" accel="1.2" decel="2.8" apparentDecel="2.8" emergencyDecel="4.8" sigma="0.04" tau="1.4" length="8.5" minGap="3.0" maxSpeed="11.0" actionStepLength="0.2" lcStrategic="1.0" lcCooperative="1.0" lcSpeedGain="0.5" lcKeepRight="0" lcAccelLat="0.4" speedDev="0.05" vClass="truck"/>',
+        '    <vType id="autorickshaw" accel="1.8" decel="3.2" apparentDecel="3.2" emergencyDecel="5.5" sigma="0.08" tau="1.0" length="2.8" minGap="1.4" maxSpeed="11.0" actionStepLength="0.2" lcStrategic="1.0" lcCooperative="1.0" lcSpeedGain="0.8" lcKeepRight="0" lcAccelLat="0.7" speedDev="0.08" vClass="passenger"/>',
     ]
     for name, edges in unique_routes.items():
         lines.append(f'    <route id="{name}" edges="{edges}"/>')

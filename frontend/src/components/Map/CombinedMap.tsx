@@ -81,6 +81,7 @@ function VehicleDots({ vehicles }: { vehicles: VehicleState[] }) {
             r={2.4}
             fill={String(v.type) === "emergency" ? "#ef4444" : "#3b82f6"}
             fillOpacity={0.78}
+            style={{ transition: "cx 120ms linear, cy 120ms linear" }}
           />
         );
       })}
